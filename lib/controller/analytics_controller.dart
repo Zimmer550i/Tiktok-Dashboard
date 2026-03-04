@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_extension/data/model/gender_model.dart';
 import 'package:flutter_extension/data/model/search_query_model.dart';
 import 'package:flutter_extension/data/model/traffic_source_model.dart';
 import 'package:get/get.dart';
@@ -20,10 +21,16 @@ class AnalyticsController extends GetxController {
 
   // Selected metric index within the grid
   final selectedMetricIndex = 0.obs;
+  final selectedViewerMetricIndex = 0.obs;
 
   final metrics = <MetricModel>[].obs;
+  final viewerMetrics = <MetricModel>[].obs;
   final series = <double>[].obs;
   final traffic = <TrafficSourceModel>[].obs;
+  final gender = <GenderModel>[].obs;
+  final age = <GenderModel>[].obs;
+  final locations = <GenderModel>[].obs;
+  final selectedTrafficTab = 0.obs;
   final searchQueries = <SearchQueryModel>[].obs;
 
   static const _kMetricsKey = "metrics_";
@@ -114,6 +121,18 @@ class AnalyticsController extends GetxController {
       metrics[i].isSelected.value = (i == index);
     }
     _updateGraphSeries(index);
+  }
+
+  void selectViewerMetric(int index) {
+    selectedViewerMetricIndex.value = index;
+    for (int i = 0; i < viewerMetrics.length; i++) {
+      viewerMetrics[i].isSelected.value = (i == index);
+    }
+    _updateGraphSeries(index);
+  }
+
+  void selectTrafficTab(int index) {
+    selectedTrafficTab.value = index;
   }
 
   void _updateGraphSeries(int metricIndex) {
@@ -409,6 +428,18 @@ class AnalyticsController extends GetxController {
             change: "+\$0.00",
           ),
         ]);
+        viewerMetrics.assignAll([
+          MetricModel(
+            title: "Total viewers",
+            value: "82",
+            change: "-14 (-14.5%)",
+          ),
+          MetricModel(
+            title: "New viewers",
+            value: "54",
+            change: "+12 (+28.5%)",
+          ),
+        ]);
         series.assignAll([9.0, 4.0, 14.0, 22.0, 28.0, 18.0, 17.0]);
         traffic.assignAll([
           TrafficSourceModel(title: "Search", percent: 0.698),
@@ -417,6 +448,68 @@ class AnalyticsController extends GetxController {
           TrafficSourceModel(title: "For You", percent: 0.054),
           TrafficSourceModel(title: "Sound", percent: 0.000),
         ]);
+        gender.assignAll([
+          GenderModel(
+            title: "Male",
+            percent: 0.66,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "Female",
+            percent: 0.25,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.09,
+            color: const Color(0xFF34404B),
+          ),
+        ]);
+        age.assignAll([
+          GenderModel(
+            title: "18-24",
+            percent: 0.45,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "25-34",
+            percent: 0.35,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "35-44",
+            percent: 0.15,
+            color: const Color(0xFF34404B),
+          ),
+          GenderModel(
+            title: "45+",
+            percent: 0.05,
+            color: const Color(0xFF1C252E),
+          ),
+        ]);
+        locations.assignAll([
+          GenderModel(
+            title: "United States",
+            percent: 0.40,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "United Kingdom",
+            percent: 0.30,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Canada",
+            percent: 0.20,
+            color: const Color(0xFF34404B),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.10,
+            color: const Color(0xFF1C252E),
+          ),
+        ]);
+
         searchQueries.assignAll([
           SearchQueryModel(title: "Yeat audio", percent: 0.014),
           SearchQueryModel(title: "yeat songs", percent: 0.014),
@@ -447,6 +540,18 @@ class AnalyticsController extends GetxController {
             title: "Est. rewards",
             value: "\$0.20",
             change: "+\$0.10",
+          ),
+        ]);
+        viewerMetrics.assignAll([
+          MetricModel(
+            title: "Total viewers",
+            value: "368",
+            change: "+84 (+29.6%)",
+          ),
+          MetricModel(
+            title: "New viewers",
+            value: "244",
+            change: "+72 (+41.8%)",
           ),
         ]);
         series.assignAll(
@@ -488,6 +593,24 @@ class AnalyticsController extends GetxController {
           TrafficSourceModel(title: "For You", percent: 0.07),
           TrafficSourceModel(title: "Sound", percent: 0.03),
         ]);
+        gender.assignAll([
+          GenderModel(
+            title: "Male",
+            percent: 0.66,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "Female",
+            percent: 0.25,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.09,
+            color: const Color(0xFF34404B),
+          ),
+        ]);
+
         searchQueries.assignAll([
           SearchQueryModel(title: "Yeat audio", percent: 0.018),
           SearchQueryModel(title: "yeat songs", percent: 0.016),
@@ -515,6 +638,18 @@ class AnalyticsController extends GetxController {
             title: "Est. rewards",
             value: "\$0.55",
             change: "+\$0.25",
+          ),
+        ]);
+        viewerMetrics.assignAll([
+          MetricModel(
+            title: "Total viewers",
+            value: "712",
+            change: "+192 (+36.9%)",
+          ),
+          MetricModel(
+            title: "New viewers",
+            value: "482",
+            change: "+140 (+40.9%)",
           ),
         ]);
         series.assignAll(
@@ -588,6 +723,24 @@ class AnalyticsController extends GetxController {
           TrafficSourceModel(title: "For You", percent: 0.075),
           TrafficSourceModel(title: "Sound", percent: 0.030),
         ]);
+        gender.assignAll([
+          GenderModel(
+            title: "Male",
+            percent: 0.66,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "Female",
+            percent: 0.25,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.09,
+            color: const Color(0xFF34404B),
+          ),
+        ]);
+
         searchQueries.assignAll([
           SearchQueryModel(title: "Yeat audio", percent: 0.020),
           SearchQueryModel(title: "yeat songs", percent: 0.018),
@@ -612,6 +765,18 @@ class AnalyticsController extends GetxController {
           MetricModel(title: "Comments", value: "18K", change: "+10K (+125%)"),
           MetricModel(title: "Shares", value: "18K", change: "+10K (+125%)"),
           MetricModel(title: "Est. rewards", value: "-", change: "0"),
+        ]);
+        viewerMetrics.assignAll([
+          MetricModel(
+            title: "Total viewers",
+            value: "1.4M",
+            change: "+820K (+141%)",
+          ),
+          MetricModel(
+            title: "New viewers",
+            value: "980K",
+            change: "+620K (+172%)",
+          ),
         ]);
         series.assignAll(
           [
@@ -698,6 +863,23 @@ class AnalyticsController extends GetxController {
           ),
           SearchQueryModel(title: "slowflowouttheway", percent: 0.014),
         ]);
+        gender.assignAll([
+          GenderModel(
+            title: "Male",
+            percent: 0.66,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "Female",
+            percent: 0.25,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.09,
+            color: const Color(0xFF34404B),
+          ),
+        ]);
 
       case AnalyticsRange.custom:
         metrics.assignAll([
@@ -716,6 +898,7 @@ class AnalyticsController extends GetxController {
             change: "+\$0.00",
           ),
         ]);
+
         series.assignAll([9.0, 4.0, 14.0, 22.0, 28.0, 18.0, 17.0]);
         traffic.assignAll([
           TrafficSourceModel(title: "Search", percent: 0.698),
@@ -733,6 +916,24 @@ class AnalyticsController extends GetxController {
             percent: 0.014,
           ),
           SearchQueryModel(title: "slowflowouttheway", percent: 0.014),
+        ]);
+
+        gender.assignAll([
+          GenderModel(
+            title: "Male",
+            percent: 0.66,
+            color: const Color(0xFF8ECAFF),
+          ),
+          GenderModel(
+            title: "Female",
+            percent: 0.25,
+            color: const Color(0xFF56738E),
+          ),
+          GenderModel(
+            title: "Other",
+            percent: 0.09,
+            color: const Color(0xFF34404B),
+          ),
         ]);
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_extension/util/app_colors.dart';
 import 'package:flutter_extension/views/screen/home/analytics_screen.dart';
+import 'package:flutter_extension/views/screen/home/performance_screen.dart';
 import 'package:get/get.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -20,7 +21,12 @@ class DashboardScreen extends StatelessWidget {
               title: "Analytics",
             ),
             const SizedBox(height: 20),
-            _buildButton(onTap: () {}, title: "Performance"),
+            _buildButton(
+              onTap: () {
+                Get.to(() => PerformancePage());
+              },
+              title: "Performance",
+            ),
           ],
         ),
       ),

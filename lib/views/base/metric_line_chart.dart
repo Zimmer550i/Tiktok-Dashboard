@@ -3,39 +3,29 @@ import 'package:flutter/material.dart';
 
 class MetricsLineChart extends StatelessWidget {
   final List<double> values;
-  final double yMax;
   final String startLabel;
   final String endLabel;
+  final double? maxY;
 
   const MetricsLineChart({
     super.key,
     required this.values,
-    required this.yMax,
     required this.startLabel,
     required this.endLabel,
+    this.maxY,
   });
 
   static const Color _line = Color(0xFF8FD3FF);
-  static const Color _bg = Color(0xFF1C1C1E);
-  static const Color _grid = Color(0xFF2C2C2E);
+  static const Color _grid = Color(0xFF3A3A3C);
+  static const Color _axis = Color(0xFF48484A);
   static const Color _muted = Color(0xFF8E8E93);
 
   @override
   Widget build(BuildContext context) {
-    if (values.isEmpty) return const SizedBox(height: 170);
-
     final spots = List.generate(
       values.length,
       (i) => FlSpot(i.toDouble(), values[i]),
     );
-
-    // Decide label formatter based on magnitude
-    String formatLabel(double v) {
-      if (v >= 1000) {
-        return "${(v / 1000).toStringAsFixed(0)}K";
-      }
-      return v.toInt().toString();
-    }
 
     return SizedBox(
       height: 170,
@@ -44,21 +34,29 @@ class MetricsLineChart extends StatelessWidget {
           minX: 0,
           maxX: (values.length - 1).toDouble(),
           minY: 0,
-          maxY: yMax,
-          clipData: const FlClipData.none(),
-          borderData: FlBorderData(show: false),
+          maxY: maxY,
+
+          borderData: FlBorderData(
+            show: true,
+            border: const Border(bottom: BorderSide(color: _axis, width: 1)),
+          ),
 
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: yMax / 3,
-            getDrawingHorizontalLine: (_) =>
-                const FlLine(color: _grid, strokeWidth: 1, dashArray: [2, 6]),
+            horizontalInterval: 12,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: _grid.withOpacity(0.6),
+                strokeWidth: 1,
+                dashArray: const [2, 6],
+              );
+            },
           ),
 
           titlesData: FlTitlesData(
             leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+              sideTitles: SideTitles(showTitles: false, reservedSize: 34),
             ),
             topTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false),
@@ -67,20 +65,14 @@ class MetricsLineChart extends StatelessWidget {
             rightTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 38,
-                interval: yMax / 3,
-                getTitlesWidget: (v, meta) {
-                  if (v == 0) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text(
-                      formatLabel(v),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _muted,
-                        height: 1.1,
-                      ),
-                    ),
+                interval: 12,
+                reservedSize: 34,
+                getTitlesWidget: (value, meta) {
+                  if (value == 0) return const SizedBox();
+
+                  return Text(
+                    value.toInt().toString(),
+                    style: const TextStyle(fontSize: 12, color: _muted),
                   );
                 },
               ),
@@ -89,28 +81,32 @@ class MetricsLineChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 26,
                 interval: (values.length - 1).toDouble(),
-                getTitlesWidget: (v, meta) {
-                  if (v == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 30),
-                      child: Text(
-                        startLabel,
-                        style: const TextStyle(fontSize: 11, color: _muted),
-                      ),
-                    );
+                reservedSize: 22,
+                getTitlesWidget: (value, meta) {
+                  String label = "";
+                  if (value == 0) {
+                    label = startLabel;
+                  } else if (value == values.length - 1) {
+                    label = endLabel;
+                  } else {
+                    return const SizedBox();
                   }
-                  if (v == (values.length - 1).toDouble()) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 10, right: 30),
-                      child: Text(
-                        endLabel,
-                        style: const TextStyle(fontSize: 11, color: _muted),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
+
+                  return SideTitleWidget(
+                    meta: meta,
+                    space: 6,
+                    fitInside: SideTitleFitInsideData(
+                      enabled: true,
+                      axisPosition: meta.axisPosition,
+                      parentAxisSize: meta.parentAxisSize,
+                      distanceFromEdge: 0,
+                    ),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 12, color: _muted),
+                    ),
+                  );
                 },
               ),
             ),
@@ -119,19 +115,19 @@ class MetricsLineChart extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: spots,
-              isCurved: values.length > 30, // smooth for long ranges
-              curveSmoothness: 0.3,
-              barWidth: values.length > 30 ? 1.0 : 1.5,
+
+              isCurved: false, // straight lines like screenshot
+              barWidth: 2,
               color: _line,
 
               dotData: FlDotData(
-                show: values.length <= 30, // hide dots for 365-day dense data
+                show: values.length <= 30,
                 getDotPainter: (spot, percent, bar, index) {
                   return FlDotCirclePainter(
-                    radius: 2.6,
-                    color: _line,
-                    strokeWidth: 1.6,
-                    strokeColor: _bg,
+                    radius: 3,
+                    color: Colors.white,
+                    strokeWidth: 1,
+                    strokeColor: _line,
                   );
                 },
               ),
@@ -142,8 +138,9 @@ class MetricsLineChart extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    _line.withOpacity(0.12),
-                    _line.withOpacity(0.04),
+                    _line.withOpacity(0.45),
+                    _line.withOpacity(0.18),
+                    _line.withOpacity(0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -154,7 +151,6 @@ class MetricsLineChart extends StatelessWidget {
           lineTouchData: const LineTouchData(enabled: false),
         ),
         duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
       ),
     );
   }

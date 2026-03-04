@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_extension/controller/analytics_controller.dart';
+import 'package:flutter_extension/views/base/gender_traffic_source.dart';
 import 'package:flutter_extension/views/base/key_metrics.dart';
 import 'package:flutter_extension/views/base/row_date.dart';
 import 'package:flutter_extension/views/base/search_queries_section.dart';
@@ -26,18 +27,28 @@ class AnalyticsScreen extends StatelessWidget {
               RangeRow(controller: controller),
               const SizedBox(height: 16),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const KeyMetricsSection(),
-                      const SizedBox(height: 24),
-                      TrafficSourceSection(),
-                      const SizedBox(height: 24),
-                      SearchQueriesSection(),
-                      const SizedBox(height: 30),
-                    ],
-                  ),
-                ),
+                child: Obx(() {
+                  final tab = controller.selectedTab.value;
+
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        KeyMetricsSection(tab: controller.selectedTab.value),
+                        const SizedBox(height: 8),
+
+                        if (tab == 1) ...[
+                          TrafficSourceSection(),
+                          const SizedBox(height: 8),
+                          SearchQueriesSection(),
+                        ],
+
+                        if (tab == 3) ...[GenderTrafficSourceSection()],
+
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -53,13 +64,20 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return SizedBox(
       height: 52,
       child: Row(
         children: [
-          SizedBox(width: 8),
-          Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-          Expanded(
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => Get.back(),
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          const Expanded(
             child: Center(
               child: Text(
                 "Analytics",
@@ -71,7 +89,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 26),
+          const SizedBox(width: 26),
         ],
       ),
     );

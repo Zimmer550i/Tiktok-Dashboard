@@ -5,7 +5,8 @@ import 'package:get/get.dart';
 import '../../controller/analytics_controller.dart';
 
 class KeyMetricsSection extends StatelessWidget {
-  const KeyMetricsSection({super.key});
+  final int tab;
+  const KeyMetricsSection({super.key, required this.tab});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,6 @@ class KeyMetricsSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-
             Text(
               controller.dateLabel,
               style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
@@ -45,35 +45,69 @@ class KeyMetricsSection extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Grid
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const spacing = 14.0;
-                final total = constraints.maxWidth;
-                final cardWidth = (total - spacing) / 2;
-                final cardHeight = controller.show365
-                    ? (cardWidth * 0.40)
-                    : (cardWidth * 0.50);
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: controller.metrics.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    mainAxisExtent: cardHeight,
-                  ),
-                  itemBuilder: (_, index) {
-                    final metric = controller.metrics[index];
-                    return MetricCard(
-                      metric: metric,
-                      onTap: () => controller.selectMetric(index),
-                      onEdit: () => controller.toggleEdit(index),
-                    );
-                  },
-                );
-              },
-            ),
+            if (tab == 1) ...[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 14.0;
+                  final total = constraints.maxWidth;
+                  final cardWidth = (total - spacing) / 2;
+                  final cardHeight = controller.show365
+                      ? (cardWidth * 0.40)
+                      : (cardWidth * 0.50);
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.metrics.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      mainAxisExtent: cardHeight,
+                    ),
+                    itemBuilder: (_, index) {
+                      final metric = controller.metrics[index];
+                      return MetricCard(
+                        metric: metric,
+                        onTap: () => controller.selectMetric(index),
+                        onEdit: () => controller.toggleEdit(index),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+
+            if (tab == 3) ...[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 14.0;
+                  final total = constraints.maxWidth;
+                  final cardWidth = (total - spacing) / 2;
+                  final cardHeight = controller.show365
+                      ? (cardWidth * 0.40)
+                      : (cardWidth * 0.50);
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.viewerMetrics.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      mainAxisExtent: cardHeight,
+                    ),
+                    itemBuilder: (_, index) {
+                      final metric = controller.viewerMetrics[index];
+                      return MetricCard(
+                        metric: metric,
+                        onTap: () => controller.selectViewerMetric(index),
+                        onEdit: () => controller.toggleEdit(index),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
 
             const SizedBox(height: 18),
 
@@ -83,7 +117,7 @@ class KeyMetricsSection extends StatelessWidget {
             // Graph
             MetricsLineChart(
               values: controller.series,
-              yMax: controller.yMax,
+              maxY: controller.yMax,
               startLabel: _fmt(controller.startDate.value),
               endLabel: _fmt(controller.endDate.value),
             ),

@@ -55,8 +55,6 @@ class MetricCard extends StatelessWidget {
     );
   }
 
-  // ================= UI =================
-
   Widget _buildTitle(TextTheme textTheme) {
     return Text(
       metric.title,
