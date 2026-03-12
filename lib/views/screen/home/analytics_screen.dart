@@ -17,41 +17,38 @@ class AnalyticsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              const _TopBar(),
-              const SizedBox(height: 12),
-              _TabRow(controller: controller),
-              RangeRow(controller: controller),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Obx(() {
-                  final tab = controller.selectedTab.value;
+        child: Column(
+          children: [
+            const _TopBar(),
+            const SizedBox(height: 12),
+            _TabRow(controller: controller),
+            RangeRow(controller: controller),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Obx(() {
+                final tab = controller.selectedTab.value;
 
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        KeyMetricsSection(tab: controller.selectedTab.value),
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      KeyMetricsSection(tab: controller.selectedTab.value),
+                      const SizedBox(height: 8),
+
+                      if (tab == 1) ...[
+                        TrafficSourceSection(),
                         const SizedBox(height: 8),
-
-                        if (tab == 1) ...[
-                          TrafficSourceSection(),
-                          const SizedBox(height: 8),
-                          SearchQueriesSection(),
-                        ],
-
-                        if (tab == 3) ...[GenderTrafficSourceSection()],
-
-                        const SizedBox(height: 30),
+                        SearchQueriesSection(),
                       ],
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ),
+
+                      if (tab == 3) ...[GenderTrafficSourceSection()],
+
+                      const SizedBox(height: 30),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );

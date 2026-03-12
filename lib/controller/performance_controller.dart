@@ -47,6 +47,7 @@ class PerformanceController extends GetxController {
             "In-depth 1 min+ videos that focus on a specific theme or expertise.",
       ),
     ],
+    lastUpdate: "Feb 15",
   ).obs;
 
   final selectedTimeFilter = 0.obs; // 0=By month, 1=By year, 2=Custom
@@ -63,6 +64,11 @@ class PerformanceController extends GetxController {
   Future<void> save() async {
     final pref = await SharedPreferences.getInstance();
     await pref.setString("performance_data", jsonEncode(data.value.toJson()));
+  }
+
+  void updateLastUpdate(String v) {
+    data.update((e) => e!.lastUpdate = v);
+    save();
   }
 
   void updateRewards(String v) {

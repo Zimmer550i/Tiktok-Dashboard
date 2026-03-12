@@ -217,7 +217,7 @@ class _TimeFilter extends StatelessWidget {
         children: [
           _filterBtn("By month", 0),
           const SizedBox(width: 8),
-          _filterBtn("365 days", 1),
+          _filterBtn("By year", 1),
           const SizedBox(width: 8),
           _filterBtn("Custom", 2, hasArrow: true),
         ],

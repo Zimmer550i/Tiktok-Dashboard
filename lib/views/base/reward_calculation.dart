@@ -37,7 +37,6 @@ class RewardsCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _MetricItem(
                   title: "Rewards",
@@ -45,21 +44,28 @@ class RewardsCard extends StatelessWidget {
                   onTap: () =>
                       _edit(context, "Rewards", d.rewards, c.updateRewards),
                 ),
+                const SizedBox(width: 12),
                 Container(
                   height: 24,
                   width: 0.5,
                   color: Colors.white.withOpacity(0.1),
                 ),
+                const SizedBox(width: 20),
+
                 _MetricItem(
                   title: "RPM",
                   value: d.rpm,
                   onTap: () => _edit(context, "RPM", d.rpm, c.updateRPM),
                 ),
+                const SizedBox(width: 20),
+
                 Container(
                   height: 24,
                   width: 0.5,
                   color: Colors.white.withOpacity(0.1),
                 ),
+                const SizedBox(width: 20),
+
                 _MetricItem(
                   title: "Qualified views",
                   value: d.qualifiedViews,

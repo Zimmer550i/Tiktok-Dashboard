@@ -52,8 +52,8 @@ class KeyMetricsSection extends StatelessWidget {
                   final total = constraints.maxWidth;
                   final cardWidth = (total - spacing) / 2;
                   final cardHeight = controller.show365
-                      ? (cardWidth * 0.40)
-                      : (cardWidth * 0.50);
+                      ? (cardWidth * 0.36)
+                      : (cardWidth * 0.46);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),

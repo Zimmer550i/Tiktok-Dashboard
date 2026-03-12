@@ -70,6 +70,8 @@ class PerformanceModel {
   // Criteria Section
   List<CriteriaModel> criteria;
 
+  String lastUpdate;
+
   PerformanceModel({
     required this.rewards,
     required this.rpm,
@@ -85,6 +87,7 @@ class PerformanceModel {
     required this.selectedVideoTagIndex,
     required this.videoCards,
     required this.criteria,
+    required this.lastUpdate,
   });
 
   Map<String, dynamic> toJson() => {
@@ -100,6 +103,7 @@ class PerformanceModel {
     "dailyChartValues": dailyChartValues,
     "year": year,
     "selectedVideoTagIndex": selectedVideoTagIndex,
+    "lastUpdate": lastUpdate,
     "videoCards": videoCards.map((v) => v.toJson()).toList(),
     "criteria": criteria.map((v) => v.toJson()).toList(),
   };
@@ -116,6 +120,7 @@ class PerformanceModel {
       additionalReward: json["additionalReward"] ?? "0.00",
       year: json["year"] ?? "2026",
       selectedVideoTagIndex: json["selectedVideoTagIndex"] ?? 0,
+      lastUpdate: json["lastUpdate"] ?? "Feb 15",
       videoCards:
           (json["videoCards"] as List?)
               ?.map((v) => VideoCardModel.fromJson(v))

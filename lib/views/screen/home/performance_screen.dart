@@ -19,10 +19,7 @@ class PerformancePage extends StatelessWidget {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
           children: [
-            const SizedBox(height: 10),
-
             const _Header(),
 
             const SizedBox(height: 16),
@@ -74,24 +71,73 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Performance",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+          Obx(() {
+            final controller = Get.find<PerformanceController>();
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Performance",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                "Last update: Feb 15",
-                style: TextStyle(color: Color(0xFF8E8E93), fontSize: 11),
-              ),
-            ],
-          ),
+                const SizedBox(height: 2),
+                GestureDetector(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.dark(
+                              primary: Colors.red,
+                              onPrimary: Colors.white,
+                              surface: Color(0xFF1C1C1E),
+                              onSurface: Colors.white,
+                            ),
+                            dialogBackgroundColor: const Color(0xFF1C1C1E),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      final months = [
+                        'Jan',
+                        'Feb',
+                        'Mar',
+                        'Apr',
+                        'May',
+                        'Jun',
+                        'Jul',
+                        'Aug',
+                        'Sep',
+                        'Oct',
+                        'Nov',
+                        'Dec',
+                      ];
+                      final formattedDate =
+                          "${months[picked.month - 1]} ${picked.day}";
+                      controller.updateLastUpdate(formattedDate);
+                    }
+                  },
+                  child: Text(
+                    "Last update: ${controller.data.value.lastUpdate}",
+                    style: const TextStyle(
+                      color: Color(0xFF8E8E93),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
