@@ -281,11 +281,19 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
 
           gridData: FlGridData(
             show: true,
-            drawVerticalLine: false,
+            drawVerticalLine: true,
+            verticalInterval: 1,
             horizontalInterval: 12,
             getDrawingHorizontalLine: (value) {
               return FlLine(
                 color: MetricsLineChart._grid.withOpacity(0.6),
+                strokeWidth: 1,
+                dashArray: const [2, 2],
+              );
+            },
+            getDrawingVerticalLine: (value) {
+              return FlLine(
+                color: MetricsLineChart._grid.withOpacity(0.25),
                 strokeWidth: 1,
                 dashArray: const [2, 6],
               );
@@ -373,7 +381,9 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
               color: MetricsLineChart._line,
 
               dotData: FlDotData(
-                show: _values.length <= 30,
+                // Show dots for a wider range so density feels consistent.
+                // (Previously capped at 30; bumping to ~double.)
+                show: _values.length <= 60,
                 getDotPainter: (spot, percent, bar, index) {
                   return FlDotCirclePainter(
                     radius: 2,

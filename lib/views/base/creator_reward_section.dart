@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_extension/controller/performance_controller.dart';
 import 'package:flutter_extension/views/base/simple_bar_chart.dart';
-import 'package:flutter_extension/views/screen/home/performance_screen.dart';
 import 'package:get/get.dart';
 
 class CreatorRewardsSection extends StatelessWidget {
@@ -90,12 +89,22 @@ class CreatorRewardsSection extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    "\$${d.creatorRewardsTotal}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: "\$",
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        TextSpan(
+                          text: d.creatorRewardsTotal,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -159,7 +168,7 @@ class CreatorRewardsSection extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(12),
@@ -306,48 +315,6 @@ class _SummaryRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _TinyRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  const _TinyRow({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white60, fontSize: 11),
-            ),
-          ],
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }

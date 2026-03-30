@@ -52,6 +52,24 @@ class PerformanceController extends GetxController {
 
   final selectedTimeFilter = 0.obs; // 0=By month, 1=By year, 2=Custom
 
+  // Chart overlay state (used by `SimpleBarChart`)
+  final chartOverlayVisible = false.obs;
+  final activeChartIndex = 0.obs;
+  final activeChartValue = 0.0.obs;
+  final activeChartDateLabel = "".obs;
+
+  void setChartSelection({
+    required int index,
+    required double value,
+    required String dateLabel,
+    bool showOverlay = false,
+  }) {
+    activeChartIndex.value = index;
+    activeChartValue.value = value;
+    activeChartDateLabel.value = dateLabel;
+    if (showOverlay) chartOverlayVisible.value = true;
+  }
+
   Future<void> load() async {
     final pref = await SharedPreferences.getInstance();
     final raw = pref.getString("performance_data");
@@ -144,26 +162,38 @@ class PerformanceController extends GetxController {
       data.update((e) {
         if (e != null) {
           if (selectedTimeFilter.value == 0) {
-            if (index < e.dailyChartValues.length) {
-              e.dailyChartValues[index] = value;
-              // Sync back if Feb 15
-              if (index == 14) {
-                e.standardReward = value.toStringAsFixed(2);
-                e.additionalReward = "0.00";
-              }
+            // Ensure all indices exist (missing entries default to 0.0).
+            if (index >= e.dailyChartValues.length) {
+              e.dailyChartValues
+                  .addAll(List.filled(index + 1 - e.dailyChartValues.length, 0.0));
+            }
+            e.dailyChartValues[index] = value;
+
+            // Sync back if Feb 15
+            if (index == 14) {
+              e.standardReward = value.toStringAsFixed(2);
+              e.additionalReward = "0.00";
             }
           } else {
-            if (index < e.monthlyChartValues.length) {
-              e.monthlyChartValues[index] = value;
-              // Sync back if Jan
-              if (index == 0) {
-                e.standardReward = value.toStringAsFixed(2);
-                e.additionalReward = "0.00";
-              }
+            // Ensure all indices exist (missing entries default to 0.0).
+            if (index >= e.monthlyChartValues.length) {
+              e.monthlyChartValues
+                  .addAll(List.filled(index + 1 - e.monthlyChartValues.length, 0.0));
+            }
+            e.monthlyChartValues[index] = value;
+
+            // Sync back if Jan
+            if (index == 0) {
+              e.standardReward = value.toStringAsFixed(2);
+              e.additionalReward = "0.00";
             }
           }
         }
       });
+
+      if (index == activeChartIndex.value) {
+        activeChartValue.value = value;
+      }
       save();
     } catch (_) {}
   }
