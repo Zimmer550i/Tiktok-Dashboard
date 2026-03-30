@@ -168,6 +168,51 @@ class PerformanceController extends GetxController {
     } catch (_) {}
   }
 
+  void insertChartValueAfter(int index, String v) {
+    try {
+      final value = double.parse(v);
+
+      data.update((e) {
+        if (e == null) return;
+
+        final isMonthly = selectedTimeFilter.value != 0;
+        final list = isMonthly ? e.monthlyChartValues : e.dailyChartValues;
+
+        final insertAt = (index + 1).clamp(0, list.length);
+        list.insert(insertAt, value);
+
+        // Keep reward fields consistent with the "special" chart indices.
+        // (Monthly: Jan is index 0. Daily: Feb 15 is index 14.)
+        if (isMonthly) {
+          if (list.isNotEmpty && list.length > 0) {
+            e.standardReward = list[0].toStringAsFixed(2);
+            e.additionalReward = "0.00";
+            e.creatorRewardsTotal =
+                (double.tryParse(e.standardReward.replaceAll(',', '')) ?? 0.0)
+                    .toStringAsFixed(2);
+          }
+        } else {
+          if (list.length > 14) {
+            e.standardReward = list[14].toStringAsFixed(2);
+            e.additionalReward = "0.00";
+            e.creatorRewardsTotal =
+                (double.tryParse(e.standardReward.replaceAll(',', '')) ?? 0.0)
+                    .toStringAsFixed(2);
+          } else if (list.isNotEmpty) {
+            // Fallback if user inserted early and list is shorter.
+            e.standardReward = list.first.toStringAsFixed(2);
+            e.additionalReward = "0.00";
+            e.creatorRewardsTotal =
+                (double.tryParse(e.standardReward.replaceAll(',', '')) ?? 0.0)
+                    .toStringAsFixed(2);
+          }
+        }
+      });
+
+      save();
+    } catch (_) {}
+  }
+
   double getMaxChartValue() {
     final values = selectedTimeFilter.value == 0
         ? data.value.dailyChartValues

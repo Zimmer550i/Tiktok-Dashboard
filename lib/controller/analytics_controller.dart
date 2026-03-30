@@ -337,6 +337,20 @@ class AnalyticsController extends GetxController {
     );
   }
 
+  void saveAnalytics() {
+    _saveFor(range.value);
+  }
+
+  Future<void> updateSeriesValues(List<double> newValues) async {
+    // Keep graph consistent with `minY: 0` and avoid invalid numbers.
+    final sanitized = newValues
+        .map((e) => (e.isFinite && e >= 0) ? e : 0.0)
+        .toList(growable: false);
+
+    series.assignAll(sanitized);
+    await _saveFor(range.value);
+  }
+
   void saveTraffic() => _saveFor(range.value);
 
   void saveSearchQueries() => _saveFor(range.value);

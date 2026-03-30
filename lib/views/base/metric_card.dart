@@ -45,9 +45,9 @@ class MetricCard extends StatelessWidget {
             children: [
               _buildTitle(textTheme),
 
-              _buildValue(textTheme),
+              _buildValue(context, textTheme),
 
-              if (!show365) _buildChangeRow(textTheme, changeInfo),
+              if (!show365) _buildChangeRow(context, textTheme, changeInfo),
             ],
           ),
         );
@@ -66,11 +66,15 @@ class MetricCard extends StatelessWidget {
     );
   }
 
-  Widget _buildValue(TextTheme textTheme) {
+  Widget _buildValue(BuildContext context, TextTheme textTheme) {
     return metric.isEditing.value
         ? TextFormField(
             initialValue: metric.value.value,
             autofocus: true,
+            onTapOutside: (_) {
+              FocusScope.of(context).unfocus();
+              _finishEdit();
+            },
             style: textTheme.headlineLarge?.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w500,
@@ -86,7 +90,10 @@ class MetricCard extends StatelessWidget {
               border: InputBorder.none,
             ),
             onChanged: (v) => metric.value.value = v,
-            onFieldSubmitted: (_) => _finishEdit(),
+            onFieldSubmitted: (_) {
+              FocusScope.of(context).unfocus();
+              _finishEdit();
+            },
           )
         : GestureDetector(
             onTap: () => metric.isEditing.value = true,
@@ -102,25 +109,44 @@ class MetricCard extends StatelessWidget {
           );
   }
 
-  Widget _buildChangeRow(TextTheme textTheme, _ChangeInfo changeInfo) {
+  Widget _buildChangeRow(
+    BuildContext context,
+    TextTheme textTheme,
+    _ChangeInfo changeInfo,
+  ) {
     if (metric.isEditing.value) {
-      return TextFormField(
-        initialValue: metric.change.value,
-        style: textTheme.bodySmall?.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: Colors.white,
-        ),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().% ]')),
+      return Row(
+        children: [
+          if (changeInfo.number != 0) _buildArrow(changeInfo),
+          const SizedBox(width: 6),
+          Expanded(
+            child: TextFormField(
+              initialValue: metric.change.value,
+              onTapOutside: (_) {
+                FocusScope.of(context).unfocus();
+                _finishEdit();
+              },
+              style: textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().% ]')),
+              ],
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+              ),
+              onChanged: (v) => metric.change.value = v,
+              onFieldSubmitted: (_) {
+                FocusScope.of(context).unfocus();
+                _finishEdit();
+              },
+            ),
+          ),
         ],
-        decoration: const InputDecoration(
-          isDense: true,
-          contentPadding: EdgeInsets.zero,
-          border: InputBorder.none,
-        ),
-        onChanged: (v) => metric.change.value = v,
-        onFieldSubmitted: (_) => _finishEdit(),
       );
     }
 
@@ -165,7 +191,7 @@ class MetricCard extends StatelessWidget {
     if (info.number == 0) return const SizedBox();
     return CircleAvatar(
       radius: 6,
-      backgroundColor: _blue,
+      backgroundColor: info.number > 0 ? _blue : _muted,
       child: Icon(
         info.number > 0
             ? Icons.arrow_upward_rounded

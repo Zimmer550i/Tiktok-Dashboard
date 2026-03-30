@@ -22,7 +22,7 @@ class PerformancePage extends StatelessWidget {
           children: [
             const _Header(),
 
-            const SizedBox(height: 16),
+            // const SizedBox(height: 8),
 
             CreatorRewardsSection(),
 
@@ -82,9 +82,9 @@ class _Header extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
+                    height: 1,
                   ),
                 ),
-                const SizedBox(height: 2),
                 GestureDetector(
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(

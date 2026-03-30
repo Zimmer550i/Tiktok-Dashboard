@@ -37,9 +37,31 @@ class KeyMetricsSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              controller.dateLabel,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () async {
+                final now = DateTime.now();
+                final picked = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(now.year - 5),
+                  lastDate: DateTime(now.year + 1),
+                  initialDateRange: DateTimeRange(
+                    start: controller.startDate.value,
+                    end: controller.endDate.value,
+                  ),
+                );
+
+                if (picked != null) {
+                  await controller.setRange(
+                    AnalyticsRange.custom,
+                    custom: picked,
+                  );
+                }
+              },
+              child: Text(
+                controller.dateLabel,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+              ),
             ),
 
             const SizedBox(height: 16),
@@ -69,7 +91,7 @@ class KeyMetricsSection extends StatelessWidget {
                       return MetricCard(
                         metric: metric,
                         onTap: () => controller.selectMetric(index),
-                        onEdit: () => controller.toggleEdit(index),
+                        onEdit: () => controller.saveAnalytics(),
                       );
                     },
                   );
@@ -101,7 +123,7 @@ class KeyMetricsSection extends StatelessWidget {
                       return MetricCard(
                         metric: metric,
                         onTap: () => controller.selectViewerMetric(index),
-                        onEdit: () => controller.toggleEdit(index),
+                        onEdit: () => controller.saveAnalytics(),
                       );
                     },
                   );
@@ -120,6 +142,8 @@ class KeyMetricsSection extends StatelessWidget {
               maxY: controller.yMax,
               startLabel: _fmt(controller.startDate.value),
               endLabel: _fmt(controller.endDate.value),
+              editable: true,
+              onValuesChanged: (v) => controller.updateSeriesValues(v),
             ),
           ],
         );

@@ -1,11 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class MetricsLineChart extends StatelessWidget {
+class MetricsLineChart extends StatefulWidget {
   final List<double> values;
   final String startLabel;
   final String endLabel;
   final double? maxY;
+  final bool editable;
+  final ValueChanged<List<double>>? onValuesChanged;
 
   const MetricsLineChart({
     super.key,
@@ -13,6 +15,8 @@ class MetricsLineChart extends StatelessWidget {
     required this.startLabel,
     required this.endLabel,
     this.maxY,
+    this.editable = false,
+    this.onValuesChanged,
   });
 
   static const Color _line = Color(0xFF8FD3FF);
@@ -21,10 +25,242 @@ class MetricsLineChart extends StatelessWidget {
   static const Color _muted = Color(0xFF8E8E93);
 
   @override
+  State<MetricsLineChart> createState() => _MetricsLineChartState();
+}
+
+class _MetricsLineChartState extends State<MetricsLineChart> {
+  late List<double> _values;
+
+  String _formatCompact(double value) {
+    final abs = value.abs();
+
+    String trim(double v, {int decimals = 1}) {
+      final s = v.toStringAsFixed(decimals);
+      // Remove trailing ".0" for cleaner axis labels.
+      return s.replaceAll(RegExp(r'\.0$'), '');
+    }
+
+    if (abs >= 1e9) return '${trim(value / 1e9)}B';
+    if (abs >= 1e6) return '${trim(value / 1e6)}M';
+    if (abs >= 1e3) return '${trim(value / 1e3)}K';
+
+    if (abs >= 1) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(1);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _values = List<double>.from(widget.values);
+  }
+
+  @override
+  void didUpdateWidget(covariant MetricsLineChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.values != widget.values) {
+      _values = List<double>.from(widget.values);
+    }
+  }
+
+  Future<void> _editValueAt(int index) async {
+    if (!mounted) return;
+    if (index < 0 || index >= _values.length) return;
+
+    final tc = TextEditingController(text: _values[index].toString());
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        final pointLabel = (index == 0 || index == _values.length - 1)
+            ? (index == 0 ? widget.startLabel : widget.endLabel)
+            : null;
+
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          surfaceTintColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: Colors.white.withOpacity(0.08),
+              width: 0.6,
+            ),
+          ),
+          title: const Text("Edit value",
+              style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (pointLabel != null) ...[
+                Text(
+                  pointLabel,
+                  style: TextStyle(color: Colors.white.withOpacity(0.65)),
+                ),
+                const SizedBox(height: 8),
+              ],
+              TextField(
+                controller: tc,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false,
+                ),
+                decoration: InputDecoration(
+                  hintText: "Enter a number",
+                  hintStyle:
+                      TextStyle(color: Colors.white.withOpacity(0.35)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.white.withOpacity(0.08)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFF8FD3FF).withOpacity(0.9),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final raw = tc.text.trim();
+                final normalized = raw.replaceAll(',', '.');
+                final parsed = double.tryParse(normalized);
+
+                if (parsed == null || !parsed.isFinite || parsed < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text("Please enter a valid non-negative number."),
+                    ),
+                  );
+                  return;
+                }
+
+                final updated = List<double>.from(_values);
+                updated[index] = parsed;
+
+                Navigator.of(context).pop();
+                if (!mounted) return;
+
+                setState(() => _values = updated);
+                widget.onValuesChanged?.call(updated);
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addValueAt(int insertIndex) async {
+    if (!mounted) return;
+    if (insertIndex < 0 || insertIndex > _values.length) return;
+
+    final tc = TextEditingController(text: "0");
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          surfaceTintColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: Colors.white.withOpacity(0.08),
+              width: 0.6,
+            ),
+          ),
+          title: const Text(
+            "Add data point",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: tc,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
+            decoration: InputDecoration(
+              hintText: "Enter a number",
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: const Color(0xFF8FD3FF).withOpacity(0.9),
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final raw = tc.text.trim();
+                final normalized = raw.replaceAll(',', '.');
+                final parsed = double.tryParse(normalized);
+
+                if (parsed == null || !parsed.isFinite || parsed < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Please enter a valid non-negative number.",
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                final updated = List<double>.from(_values);
+                updated.insert(insertIndex, parsed);
+
+                Navigator.of(context).pop();
+                if (!mounted) return;
+
+                setState(() => _values = updated);
+                widget.onValuesChanged?.call(updated);
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_values.isEmpty) {
+      return const SizedBox(height: 170);
+    }
+
+    final maxYForAxis = (widget.maxY != null && widget.maxY! > 0)
+        ? widget.maxY!
+        : _values.reduce((a, b) => a > b ? a : b);
+
+    final safeMaxY = (maxYForAxis > 0 ? maxYForAxis : 1.0).toDouble();
+    const maxRightTitles = 5;
+    final rightInterval = safeMaxY / (maxRightTitles - 1);
+
     final spots = List.generate(
-      values.length,
-      (i) => FlSpot(i.toDouble(), values[i]),
+      _values.length,
+      (i) => FlSpot(i.toDouble(), _values[i]),
     );
 
     return SizedBox(
@@ -32,13 +268,15 @@ class MetricsLineChart extends StatelessWidget {
       child: LineChart(
         LineChartData(
           minX: 0,
-          maxX: (values.length - 1).toDouble(),
+          maxX: (_values.length - 1).toDouble(),
           minY: 0,
-          maxY: maxY,
+          maxY: safeMaxY,
 
           borderData: FlBorderData(
             show: true,
-            border: const Border(bottom: BorderSide(color: _axis, width: 1)),
+            border: const Border(
+              bottom: BorderSide(color: MetricsLineChart._axis, width: 1),
+            ),
           ),
 
           gridData: FlGridData(
@@ -47,7 +285,7 @@ class MetricsLineChart extends StatelessWidget {
             horizontalInterval: 12,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: _grid.withOpacity(0.6),
+                color: MetricsLineChart._grid.withOpacity(0.6),
                 strokeWidth: 1,
                 dashArray: const [2, 6],
               );
@@ -65,14 +303,25 @@ class MetricsLineChart extends StatelessWidget {
             rightTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                interval: 12,
+                interval: rightInterval,
                 reservedSize: 34,
                 getTitlesWidget: (value, meta) {
                   if (value == 0) return const SizedBox();
 
+                  // Only show labels close to our intended tick marks,
+                  // keeping the number of visible labels <= 5.
+                  final tickIndex = (value / rightInterval).round();
+                  final expected = tickIndex * rightInterval;
+                  if ((value - expected).abs() > rightInterval.abs() * 0.02) {
+                    return const SizedBox();
+                  }
+
                   return Text(
-                    value.toInt().toString(),
-                    style: const TextStyle(fontSize: 12, color: _muted),
+                    _formatCompact(value),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: MetricsLineChart._muted,
+                    ),
                   );
                 },
               ),
@@ -81,14 +330,14 @@ class MetricsLineChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                interval: (values.length - 1).toDouble(),
+                interval: (_values.length - 1).toDouble(),
                 reservedSize: 22,
                 getTitlesWidget: (value, meta) {
                   String label = "";
                   if (value == 0) {
-                    label = startLabel;
-                  } else if (value == values.length - 1) {
-                    label = endLabel;
+                    label = widget.startLabel;
+                  } else if (value == _values.length - 1) {
+                    label = widget.endLabel;
                   } else {
                     return const SizedBox();
                   }
@@ -104,7 +353,10 @@ class MetricsLineChart extends StatelessWidget {
                     ),
                     child: Text(
                       label,
-                      style: const TextStyle(fontSize: 12, color: _muted),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: MetricsLineChart._muted,
+                      ),
                     ),
                   );
                 },
@@ -118,16 +370,16 @@ class MetricsLineChart extends StatelessWidget {
 
               isCurved: false, // straight lines like screenshot
               barWidth: 2,
-              color: _line,
+              color: MetricsLineChart._line,
 
               dotData: FlDotData(
-                show: values.length <= 30,
+                show: _values.length <= 30,
                 getDotPainter: (spot, percent, bar, index) {
                   return FlDotCirclePainter(
-                    radius: 3,
+                    radius: 2,
                     color: Colors.white,
                     strokeWidth: 1,
-                    strokeColor: _line,
+                    strokeColor: MetricsLineChart._line,
                   );
                 },
               ),
@@ -138,9 +390,9 @@ class MetricsLineChart extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    _line.withOpacity(0.45),
-                    _line.withOpacity(0.18),
-                    _line.withOpacity(0.05),
+                    MetricsLineChart._line.withOpacity(0.45),
+                    MetricsLineChart._line.withOpacity(0.18),
+                    MetricsLineChart._line.withOpacity(0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -148,7 +400,33 @@ class MetricsLineChart extends StatelessWidget {
             ),
           ],
 
-          lineTouchData: const LineTouchData(enabled: false),
+          lineTouchData: LineTouchData(
+            enabled: widget.editable,
+            handleBuiltInTouches: false,
+            touchCallback: (event, response) {
+              if (!widget.editable) return;
+              if (event is FlTapUpEvent) {
+                if (response?.lineBarSpots == null ||
+                    response!.lineBarSpots!.isEmpty) {
+                  return;
+                }
+
+                final spotIndex = response.lineBarSpots!.first.spotIndex;
+                _editValueAt(spotIndex);
+                return;
+              }
+
+              if (event is FlLongPressStart) {
+                final spotIndex = response?.lineBarSpots?.isNotEmpty == true
+                    ? response!.lineBarSpots!.first.spotIndex
+                    : null;
+                final insertIndex =
+                    spotIndex == null ? _values.length : spotIndex + 1;
+                _addValueAt(insertIndex);
+                return;
+              }
+            },
+          ),
         ),
         duration: const Duration(milliseconds: 350),
       ),

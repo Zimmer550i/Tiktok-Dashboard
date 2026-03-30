@@ -22,6 +22,7 @@ class AnalyticsScreen extends StatelessWidget {
             const _TopBar(),
             const SizedBox(height: 12),
             _TabRow(controller: controller),
+            const SizedBox(height: 8),
             RangeRow(controller: controller),
             const SizedBox(height: 16),
             Expanded(
