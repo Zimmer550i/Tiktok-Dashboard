@@ -27,6 +27,10 @@ class PerformanceController extends GetxController {
     ),
     monthlyChartValues: List.filled(12, 0.0),
     dailyChartValues: List.filled(31, 0.0),
+    monthlyStandardValues: List.filled(12, 0.0),
+    monthlyAdditionalValues: List.filled(12, 0.0),
+    dailyStandardValues: List.filled(31, 0.0),
+    dailyAdditionalValues: List.filled(31, 0.0),
     criteria: [
       CriteriaModel(
         title: "Well-crafted",
@@ -145,7 +149,11 @@ class PerformanceController extends GetxController {
           e.creatorRewardsTotal = total.toStringAsFixed(2);
           // Sync to Jan (Monthly) and Feb 15 (Daily) to match images
           e.monthlyChartValues[0] = total;
+          e.monthlyStandardValues[0] = s;
+          e.monthlyAdditionalValues[0] = a;
           e.dailyChartValues[14] = total;
+          e.dailyStandardValues[14] = s;
+          e.dailyAdditionalValues[14] = a;
         }
       });
     } catch (_) {}
@@ -164,10 +172,14 @@ class PerformanceController extends GetxController {
           if (selectedTimeFilter.value == 0) {
             // Ensure all indices exist (missing entries default to 0.0).
             if (index >= e.dailyChartValues.length) {
-              e.dailyChartValues
-                  .addAll(List.filled(index + 1 - e.dailyChartValues.length, 0.0));
+              final n = index + 1 - e.dailyChartValues.length;
+              e.dailyChartValues.addAll(List.filled(n, 0.0));
+              e.dailyStandardValues.addAll(List.filled(n, 0.0));
+              e.dailyAdditionalValues.addAll(List.filled(n, 0.0));
             }
             e.dailyChartValues[index] = value;
+            e.dailyStandardValues[index] = value;
+            e.dailyAdditionalValues[index] = 0.0;
 
             // Sync back if Feb 15
             if (index == 14) {
@@ -177,10 +189,14 @@ class PerformanceController extends GetxController {
           } else {
             // Ensure all indices exist (missing entries default to 0.0).
             if (index >= e.monthlyChartValues.length) {
-              e.monthlyChartValues
-                  .addAll(List.filled(index + 1 - e.monthlyChartValues.length, 0.0));
+              final n = index + 1 - e.monthlyChartValues.length;
+              e.monthlyChartValues.addAll(List.filled(n, 0.0));
+              e.monthlyStandardValues.addAll(List.filled(n, 0.0));
+              e.monthlyAdditionalValues.addAll(List.filled(n, 0.0));
             }
             e.monthlyChartValues[index] = value;
+            e.monthlyStandardValues[index] = value;
+            e.monthlyAdditionalValues[index] = 0.0;
 
             // Sync back if Jan
             if (index == 0) {
@@ -198,6 +214,64 @@ class PerformanceController extends GetxController {
     } catch (_) {}
   }
 
+  /// Sets standard and additional amounts for one chart bar; total is derived as their sum.
+  void updateChartSplit(
+    int index,
+    String standardStr,
+    String additionalStr,
+  ) {
+    double parseReward(String raw) {
+      final t = raw.trim().replaceAll(',', '.');
+      return double.tryParse(t) ?? 0.0;
+    }
+
+    final s = parseReward(standardStr);
+    final a = parseReward(additionalStr);
+    final total = s + a;
+
+    data.update((e) {
+      if (e == null) return;
+      if (selectedTimeFilter.value == 0) {
+        if (index >= e.dailyChartValues.length) {
+          final n = index + 1 - e.dailyChartValues.length;
+          e.dailyChartValues.addAll(List.filled(n, 0.0));
+          e.dailyStandardValues.addAll(List.filled(n, 0.0));
+          e.dailyAdditionalValues.addAll(List.filled(n, 0.0));
+        }
+        e.dailyStandardValues[index] = s;
+        e.dailyAdditionalValues[index] = a;
+        e.dailyChartValues[index] = total;
+
+        if (index == 14) {
+          e.standardReward = s.toStringAsFixed(2);
+          e.additionalReward = a.toStringAsFixed(2);
+          e.creatorRewardsTotal = total.toStringAsFixed(2);
+        }
+      } else {
+        if (index >= e.monthlyChartValues.length) {
+          final n = index + 1 - e.monthlyChartValues.length;
+          e.monthlyChartValues.addAll(List.filled(n, 0.0));
+          e.monthlyStandardValues.addAll(List.filled(n, 0.0));
+          e.monthlyAdditionalValues.addAll(List.filled(n, 0.0));
+        }
+        e.monthlyStandardValues[index] = s;
+        e.monthlyAdditionalValues[index] = a;
+        e.monthlyChartValues[index] = total;
+
+        if (index == 0) {
+          e.standardReward = s.toStringAsFixed(2);
+          e.additionalReward = a.toStringAsFixed(2);
+          e.creatorRewardsTotal = total.toStringAsFixed(2);
+        }
+      }
+    });
+
+    if (index == activeChartIndex.value) {
+      activeChartValue.value = total;
+    }
+    save();
+  }
+
   void insertChartValueAfter(int index, String v) {
     try {
       final value = double.parse(v);
@@ -207,9 +281,15 @@ class PerformanceController extends GetxController {
 
         final isMonthly = selectedTimeFilter.value != 0;
         final list = isMonthly ? e.monthlyChartValues : e.dailyChartValues;
+        final stdList =
+            isMonthly ? e.monthlyStandardValues : e.dailyStandardValues;
+        final addList =
+            isMonthly ? e.monthlyAdditionalValues : e.dailyAdditionalValues;
 
         final insertAt = (index + 1).clamp(0, list.length);
         list.insert(insertAt, value);
+        stdList.insert(insertAt, value);
+        addList.insert(insertAt, 0.0);
 
         // Keep reward fields consistent with the "special" chart indices.
         // (Monthly: Jan is index 0. Daily: Feb 15 is index 14.)
@@ -244,13 +324,21 @@ class PerformanceController extends GetxController {
   }
 
   double getMaxChartValue() {
-    final values = selectedTimeFilter.value == 0
-        ? data.value.dailyChartValues
-        : data.value.monthlyChartValues;
-    if (values.isEmpty) return 3.0;
+    final isDaily = selectedTimeFilter.value == 0;
+    final std = isDaily
+        ? data.value.dailyStandardValues
+        : data.value.monthlyStandardValues;
+    final add = isDaily
+        ? data.value.dailyAdditionalValues
+        : data.value.monthlyAdditionalValues;
+    final n = std.length > add.length ? std.length : add.length;
+    if (n == 0) return 3.0;
     double max = 0.0;
-    for (var v in values) {
-      if (v > max) max = v;
+    for (var i = 0; i < n; i++) {
+      final s = i < std.length ? std[i] : 0.0;
+      final a = i < add.length ? add[i] : 0.0;
+      final t = s + a;
+      if (t > max) max = t;
     }
     return max > 0 ? max * 1.2 : 3.0; // Add 20% headroom
   }

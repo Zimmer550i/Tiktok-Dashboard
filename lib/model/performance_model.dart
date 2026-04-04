@@ -63,9 +63,13 @@ class PerformanceModel {
   int selectedVideoTagIndex;
   List<VideoCardModel> videoCards;
 
-  // Chart Data
+  // Chart Data (totals; kept in sync with standard + additional per index)
   List<double> monthlyChartValues;
   List<double> dailyChartValues;
+  List<double> monthlyStandardValues;
+  List<double> monthlyAdditionalValues;
+  List<double> dailyStandardValues;
+  List<double> dailyAdditionalValues;
 
   // Criteria Section
   List<CriteriaModel> criteria;
@@ -83,6 +87,10 @@ class PerformanceModel {
     required this.additionalReward,
     required this.monthlyChartValues,
     required this.dailyChartValues,
+    required this.monthlyStandardValues,
+    required this.monthlyAdditionalValues,
+    required this.dailyStandardValues,
+    required this.dailyAdditionalValues,
     required this.year,
     required this.selectedVideoTagIndex,
     required this.videoCards,
@@ -101,6 +109,10 @@ class PerformanceModel {
     "additionalReward": additionalReward,
     "monthlyChartValues": monthlyChartValues,
     "dailyChartValues": dailyChartValues,
+    "monthlyStandardValues": monthlyStandardValues,
+    "monthlyAdditionalValues": monthlyAdditionalValues,
+    "dailyStandardValues": dailyStandardValues,
+    "dailyAdditionalValues": dailyAdditionalValues,
     "year": year,
     "selectedVideoTagIndex": selectedVideoTagIndex,
     "lastUpdate": lastUpdate,
@@ -109,6 +121,31 @@ class PerformanceModel {
   };
 
   factory PerformanceModel.fromJson(Map<String, dynamic> json) {
+    final monthlyChartValues = json["monthlyChartValues"] != null
+        ? List<double>.from(json["monthlyChartValues"])
+        : List.filled(12, 0.0);
+    final dailyChartValues = json["dailyChartValues"] != null
+        ? List<double>.from(json["dailyChartValues"])
+        : List.filled(31, 0.0);
+
+    final monthlyStandardValues = json["monthlyStandardValues"] != null
+        ? List<double>.from(json["monthlyStandardValues"])
+        : List<double>.from(monthlyChartValues);
+    final monthlyAdditionalValues = json["monthlyAdditionalValues"] != null
+        ? List<double>.from(json["monthlyAdditionalValues"])
+        : List<double>.filled(monthlyChartValues.length, 0.0);
+    _trimOrPadChartSplit(monthlyChartValues, monthlyStandardValues,
+        monthlyAdditionalValues);
+
+    final dailyStandardValues = json["dailyStandardValues"] != null
+        ? List<double>.from(json["dailyStandardValues"])
+        : List<double>.from(dailyChartValues);
+    final dailyAdditionalValues = json["dailyAdditionalValues"] != null
+        ? List<double>.from(json["dailyAdditionalValues"])
+        : List<double>.filled(dailyChartValues.length, 0.0);
+    _trimOrPadChartSplit(
+        dailyChartValues, dailyStandardValues, dailyAdditionalValues);
+
     return PerformanceModel(
       rewards: json["rewards"] ?? "0.00",
       rpm: json["rpm"] ?? "--",
@@ -134,12 +171,12 @@ class PerformanceModel {
               authorImageUrl: "",
             ),
           ),
-      monthlyChartValues: json["monthlyChartValues"] != null
-          ? List<double>.from(json["monthlyChartValues"])
-          : List.filled(12, 0.0),
-      dailyChartValues: json["dailyChartValues"] != null
-          ? List<double>.from(json["dailyChartValues"])
-          : List.filled(31, 0.0),
+      monthlyChartValues: monthlyChartValues,
+      dailyChartValues: dailyChartValues,
+      monthlyStandardValues: monthlyStandardValues,
+      monthlyAdditionalValues: monthlyAdditionalValues,
+      dailyStandardValues: dailyStandardValues,
+      dailyAdditionalValues: dailyAdditionalValues,
       criteria:
           (json["criteria"] as List?)
               ?.map((v) => CriteriaModel.fromJson(v))
@@ -165,5 +202,26 @@ class PerformanceModel {
             ),
           ],
     );
+  }
+}
+
+/// Keeps standard/additional lists aligned with chart total series length.
+void _trimOrPadChartSplit(
+  List<double> totals,
+  List<double> standard,
+  List<double> additional,
+) {
+  final n = totals.length;
+  while (standard.length < n) {
+    standard.add(0.0);
+  }
+  if (standard.length > n) {
+    standard.removeRange(n, standard.length);
+  }
+  while (additional.length < n) {
+    additional.add(0.0);
+  }
+  if (additional.length > n) {
+    additional.removeRange(n, additional.length);
   }
 }

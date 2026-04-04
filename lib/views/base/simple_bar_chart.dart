@@ -13,15 +13,25 @@ class SimpleBarChart extends StatelessWidget {
     return Obx(() {
       final d = controller.data.value;
       final isMonthly = controller.selectedTimeFilter.value != 0;
+      final overlayVisible = controller.chartOverlayVisible.value;
+      final activeIndex = controller.activeChartIndex.value;
+      final activeValue = controller.activeChartValue.value;
+      final activeDateLabel = controller.activeChartDateLabel.value;
       // Always render the full fixed-range timeline.
       final int barCount = isMonthly ? 12 : 31;
       final List<double> chartData =
           isMonthly ? d.monthlyChartValues : d.dailyChartValues;
+      final List<double> standardData =
+          isMonthly ? d.monthlyStandardValues : d.dailyStandardValues;
+      final List<double> additionalData =
+          isMonthly ? d.monthlyAdditionalValues : d.dailyAdditionalValues;
 
       // Compute max only from visible fixed range so bar heights match.
       double maxVal = 0.0;
       for (int i = 0; i < barCount; i++) {
-        final v = i < chartData.length ? chartData[i] : 0.0;
+        final std = i < standardData.length ? standardData[i] : 0.0;
+        final add = i < additionalData.length ? additionalData[i] : 0.0;
+        final v = std + add;
         if (v > maxVal) maxVal = v;
       }
       maxVal = maxVal > 0 ? maxVal * 1.2 : 3.0;
@@ -99,9 +109,24 @@ class SimpleBarChart extends StatelessWidget {
                                 isMonthly ? 20.0 : 6.0,
                               );
 
-                              double valueAt(int index) => index < chartData.length
-                                  ? chartData[index]
-                                  : 0.0;
+                              double standardAt(int index) =>
+                                  index < standardData.length
+                                      ? standardData[index]
+                                      : 0.0;
+
+                              double additionalAt(int index) =>
+                                  index < additionalData.length
+                                      ? additionalData[index]
+                                      : 0.0;
+
+                              double valueAt(int index) {
+                                final s = standardAt(index);
+                                final a = additionalAt(index);
+                                if (s + a > 0) return s + a;
+                                return index < chartData.length
+                                    ? chartData[index]
+                                    : 0.0;
+                              }
 
                               String dateLabelAt(int index) {
                                 if (isMonthly) {
@@ -124,8 +149,6 @@ class SimpleBarChart extends StatelessWidget {
                                 return "Feb ${index + 1}";
                               }
 
-                              final int activeIndex =
-                                  controller.activeChartIndex.value;
                               final int activeIndexClamped =
                                   activeIndex.clamp(0, barCount - 1);
 
@@ -176,8 +199,6 @@ class SimpleBarChart extends StatelessWidget {
                                               .floor()
                                               .clamp(0, barCount - 1);
                                       final val = valueAt(idx);
-                                      final overlayVisible =
-                                          controller.chartOverlayVisible.value;
                                       final isSameIndex =
                                           controller.activeChartIndex.value ==
                                           idx;
@@ -199,78 +220,164 @@ class SimpleBarChart extends StatelessWidget {
                                     },
                                     onLongPressStart: (details) {
                                       if (availableWidth <= 0 ||
-                                          barCount <= 0) return;
+                                          barCount <= 0) {
+                                        return;
+                                      }
                                       final dx = details.localPosition.dx;
                                       final idx = ((dx / availableWidth) *
                                                   barCount)
                                               .floor()
                                               .clamp(0, barCount - 1);
-                                      final val = valueAt(idx);
+                                      final std = standardAt(idx);
+                                      final add = additionalAt(idx);
+                                      var total = std + add;
+                                      final fallback = idx < chartData.length
+                                          ? chartData[idx]
+                                          : 0.0;
+                                      if (total <= 0 && fallback > 0) {
+                                        total = fallback;
+                                      }
+                                      final displayStd =
+                                          std + add > 0 ? std : total;
+                                      final displayAdd =
+                                          std + add > 0 ? add : 0.0;
 
                                       final String barTitle = isMonthly
                                           ? "Month ${idx + 1} Data"
                                           : "Feb ${idx + 1} Data";
 
-                                      _edit(
+                                      _editChartSplit(
                                         context,
                                         barTitle,
-                                        val.toString(),
-                                        (v) {
-                                          controller.updateChartValue(idx, v);
+                                        displayStd.toStringAsFixed(2),
+                                        displayAdd.toStringAsFixed(2),
+                                        (standardV, additionalV) {
+                                          controller.updateChartSplit(
+                                            idx,
+                                            standardV,
+                                            additionalV,
+                                          );
 
-                                          final parsed = double.tryParse(
-                                                v.trim().replaceAll(',', '.'),
+                                          final parsedStd = double.tryParse(
+                                                standardV
+                                                    .trim()
+                                                    .replaceAll(',', '.'),
                                               ) ??
                                               0.0;
-                                          // Update overlay value if it was already shown.
+                                          final parsedAdd = double.tryParse(
+                                                additionalV
+                                                    .trim()
+                                                    .replaceAll(',', '.'),
+                                              ) ??
+                                              0.0;
                                           controller.setChartSelection(
                                             index: idx,
-                                            value: parsed,
+                                            value: parsedStd + parsedAdd,
                                             dateLabel: dateLabelAt(idx),
                                             showOverlay: false,
                                           );
                                         },
                                       );
                                     },
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: List.generate(barCount,
-                                          (index) {
-                                        final val = valueAt(index);
-                                        final isTarget = isMonthly
-                                            ? (index == 0) // Jan
-                                            : (index == 14); // Feb 15
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: SizedBox(
+                                        height: barMaxHeight,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: List.generate(barCount,
+                                              (index) {
+                                            final std = standardAt(index);
+                                            final add = additionalAt(index);
+                                            var total = std + add;
+                                            final fallback = index <
+                                                    chartData.length
+                                                ? chartData[index]
+                                                : 0.0;
+                                            if (total <= 0 && fallback > 0) {
+                                              total = fallback;
+                                            }
 
-                                        final double barHeight =
-                                            (val / maxVal) * barMaxHeight;
+                                            const standardColor =
+                                                Color(0xFF0075DB);
+                                            const additionalColor =
+                                                Color(0xFF00D1FF);
+                                            const topRadius =
+                                                Radius.circular(2);
 
-                                        return Container(
-                                          width: barWidth,
-                                          height: barHeight.clamp(
-                                            // Keep zero values visible/clickable.
-                                            2.0,
-                                            barMaxHeight,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isTarget
-                                                ? const Color(0xFF4A4A4A)
-                                                : const Color(0xFF2C2C2E),
-                                            borderRadius:
-                                                const BorderRadius.only(
-                                              topLeft:
-                                                  Radius.circular(2),
-                                              topRight:
-                                                  Radius.circular(2),
-                                            ),
-                                          ),
-                                        );
-                                      }),
+                                            final double rawH =
+                                                (total / maxVal) * barMaxHeight;
+                                            final double totalBarH = total > 0
+                                                ? rawH.clamp(2.0, barMaxHeight)
+                                                : 2.0;
+
+                                            final bool hasSplit = std + add > 0;
+                                            final double effStd =
+                                                hasSplit ? std : total;
+                                            final double effAdd =
+                                                hasSplit ? add : 0.0;
+
+                                            double stdH = 0;
+                                            double addH = 0;
+                                            if (total > 0) {
+                                              stdH =
+                                                  (effStd / total) * totalBarH;
+                                              addH =
+                                                  (effAdd / total) * totalBarH;
+                                            } else {
+                                              stdH = totalBarH;
+                                            }
+
+                                            return SizedBox(
+                                              width: barWidth,
+                                              height: barMaxHeight,
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  if (addH > 0)
+                                                    Container(
+                                                      height: addH,
+                                                      width: barWidth,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        color: additionalColor,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          topLeft: topRadius,
+                                                          topRight: topRadius,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (stdH > 0)
+                                                    Container(
+                                                      height: stdH,
+                                                      width: barWidth,
+                                                      decoration: BoxDecoration(
+                                                        color: standardColor,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          topLeft: addH > 0
+                                                              ? Radius.zero
+                                                              : topRadius,
+                                                          topRight: addH > 0
+                                                              ? Radius.zero
+                                                              : topRadius,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  if (controller.chartOverlayVisible.value)
+                                  if (overlayVisible)
                                     Positioned(
                                       top: 25,
                                       left: tooltipLeft,
@@ -295,9 +402,7 @@ class SimpleBarChart extends StatelessWidget {
                                               Row(
                                                 children: [
                                                   Text(
-                                                    controller
-                                                        .activeChartDateLabel
-                                                        .value,
+                                                    activeDateLabel,
                                                     style: const TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 12,
@@ -305,7 +410,9 @@ class SimpleBarChart extends StatelessWidget {
                                                   ),
                                                   const SizedBox(width: 50),
                                                   Text(
-                                                    "\$${controller.activeChartValue.value.toStringAsFixed(2)}",
+                                                    "\$${
+                                                        activeValue.toStringAsFixed(2)
+                                                    }",
                                                     style: const TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 12,
@@ -325,13 +432,14 @@ class SimpleBarChart extends StatelessWidget {
                                               _TinyRow(
                                                 label: "Standard Reward",
                                                 value:
-                                                    "\$${controller.activeChartValue.value.toStringAsFixed(2)}",
+                                                    "\$${standardAt(activeIndexClamped).toStringAsFixed(2)}",
                                                 color: const Color(0xFF0075DB),
                                               ),
                                               const SizedBox(height: 10),
                                               _TinyRow(
                                                 label: "Additional Reward",
-                                                value: "\$0.00",
+                                                value:
+                                                    "\$${additionalAt(activeIndexClamped).toStringAsFixed(2)}",
                                                 color: const Color(0xFF00D1FF),
                                               ),
                                             ],
@@ -465,28 +573,54 @@ class _TinyRow extends StatelessWidget {
   }
 }
 
-void _edit(
+void _editChartSplit(
   BuildContext context,
   String title,
-  String initial,
-  Function(String) onSave,
+  String initialStandard,
+  String initialAdditional,
+  void Function(String standard, String additional) onSave,
 ) {
-  final tc = TextEditingController(text: initial);
+  final stdTc = TextEditingController(text: initialStandard);
+  final addTc = TextEditingController(text: initialAdditional);
 
   Get.defaultDialog(
     title: title,
-    content: TextField(
-      controller: tc,
-      keyboardType: const TextInputType.numberWithOptions(
-        decimal: true,
-        signed: false,
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: stdTc,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: "Standard reward",
+              hintText: "Enter standard reward",
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: addTc,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: false,
+            ),
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: "Additional reward",
+              hintText: "Enter additional reward",
+            ),
+          ),
+        ],
       ),
-      style: const TextStyle(color: Colors.white),
-      decoration: const InputDecoration(hintText: "Enter value"),
     ),
     confirm: ElevatedButton(
       onPressed: () {
-        onSave(tc.text.trim());
+        onSave(stdTc.text.trim(), addTc.text.trim());
         Get.back();
       },
       child: const Text("Save"),
