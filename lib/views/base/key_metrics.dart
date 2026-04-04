@@ -143,6 +143,7 @@ class KeyMetricsSection extends StatelessWidget {
               startLabel: _fmt(controller.startDate.value),
               endLabel: _fmt(controller.endDate.value),
               editable: true,
+              showDots: controller.range.value == AnalyticsRange.d7,
               onValuesChanged: (v) => controller.updateSeriesValues(v),
             ),
           ],

@@ -8,6 +8,8 @@ class MetricsLineChart extends StatefulWidget {
   final double? maxY;
   final bool editable;
   final ValueChanged<List<double>>? onValuesChanged;
+  /// When true (e.g. "7 Days" range), data points render as dots on the line.
+  final bool showDots;
 
   const MetricsLineChart({
     super.key,
@@ -17,9 +19,10 @@ class MetricsLineChart extends StatefulWidget {
     this.maxY,
     this.editable = false,
     this.onValuesChanged,
+    this.showDots = false,
   });
 
-  static const Color _line = Color(0xFF8FD3FF);
+  static const Color _line = Color.fromARGB(255, 46, 155, 228);
   static const Color _grid = Color(0xFF3A3A3C);
   static const Color _axis = Color(0xFF48484A);
   static const Color _muted = Color(0xFF8E8E93);
@@ -377,18 +380,16 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
               spots: spots,
 
               isCurved: false, // straight lines like screenshot
-              barWidth: 2,
+              barWidth: 1,
               color: MetricsLineChart._line,
 
               dotData: FlDotData(
-                // Show dots for a wider range so density feels consistent.
-                // (Previously capped at 30; bumping to ~double.)
-                show: _values.length <= 60,
+                show: widget.showDots,
                 getDotPainter: (spot, percent, bar, index) {
                   return FlDotCirclePainter(
-                    radius: 2,
+                    radius: 1,
                     color: Colors.white,
-                    strokeWidth: 1,
+                    strokeWidth: 0.5,
                     strokeColor: MetricsLineChart._line,
                   );
                 },

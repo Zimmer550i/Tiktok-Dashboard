@@ -3,6 +3,15 @@ import 'package:flutter_extension/controller/performance_controller.dart';
 import 'package:flutter_extension/views/base/simple_bar_chart.dart';
 import 'package:get/get.dart';
 
+const Color _creatorChangeBlue = Color(0xFF0075DB);
+const Color _creatorChangeMuted = Color(0xFF8E8E93);
+
+double _parseCreatorChangeAmount(String valPart) {
+  final cleaned =
+      valPart.replaceAll(r'$', '').replaceAll(',', '.').trim();
+  return double.tryParse(cleaned) ?? 0.0;
+}
+
 class CreatorRewardsSection extends StatelessWidget {
   final controller = Get.find<PerformanceController>();
 
@@ -120,19 +129,28 @@ class CreatorRewardsSection extends StatelessWidget {
                         final parts = d.creatorRewardsChange.split('(');
                         final valPart = parts[0].trim();
                         final datePart = parts.length > 1 ? "(${parts[1]}" : "";
+                        final changeAmt = _parseCreatorChangeAmount(valPart);
+                        final isUp = changeAmt > 0;
+                        final IconData trendIcon = changeAmt < 0
+                            ? Icons.arrow_drop_down
+                            : changeAmt > 0
+                                ? Icons.arrow_drop_up
+                                : Icons.arrow_drop_down;
+                        final Color trendColor =
+                            isUp ? _creatorChangeBlue : _creatorChangeMuted;
 
                         return Row(
                           children: [
-                            const Icon(
-                              Icons.cloud_upload,
-                              color: Color(0xFF0075DB),
+                            Icon(
+                              trendIcon,
+                              color: trendColor,
                               size: 20,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               "\$$valPart",
-                              style: const TextStyle(
-                                color: Color(0xFF0075DB),
+                              style: TextStyle(
+                                color: trendColor,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),

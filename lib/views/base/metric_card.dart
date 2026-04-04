@@ -17,7 +17,7 @@ class MetricCard extends StatelessWidget {
   });
 
   static const _bg = Color(0xFF1C1C1E);
-  static const _border = Color(0xFF2C2C2E);
+  static const _border = Color.fromARGB(255, 125, 125, 130);
   static const _selected = Color(0xFF0075DB);
   static const _blue = Color(0xFF8ECAFF);
   static const _muted = Color(0xFF8E8E93);
