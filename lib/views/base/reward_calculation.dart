@@ -48,7 +48,7 @@ class RewardsCard extends StatelessWidget {
                 Container(
                   height: 24,
                   width: 0.5,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
                 const SizedBox(width: 20),
 
@@ -62,7 +62,7 @@ class RewardsCard extends StatelessWidget {
                 Container(
                   height: 24,
                   width: 0.5,
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
                 const SizedBox(width: 20),
 
@@ -76,7 +76,7 @@ class RewardsCard extends StatelessWidget {
                     c.updateQualifiedViews,
                   ),
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ],
             ),

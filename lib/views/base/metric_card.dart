@@ -204,10 +204,10 @@ class MetricCard extends StatelessWidget {
 
   BoxDecoration _buildDecoration(bool selected) {
     return BoxDecoration(
-      color: selected ? _selected.withOpacity(0.05) : _bg,
+      color: selected ? _selected.withValues(alpha: 0.05) : _bg,
       borderRadius: BorderRadius.circular(8),
       border: Border.all(
-        color: selected ? _selected : _border.withOpacity(0.7),
+        color: selected ? _selected : _border.withValues(alpha: 0.7),
       ),
     );
   }

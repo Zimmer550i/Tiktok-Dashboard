@@ -23,7 +23,6 @@ class PerformancePage extends StatelessWidget {
             const _Header(),
 
             // const SizedBox(height: 8),
-
             CreatorRewardsSection(),
 
             const SizedBox(height: 16),
@@ -167,7 +166,7 @@ class DashedLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double dashWidth = 2, dashSpace = 2, startX = 0;
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..strokeWidth = 1;
     while (startX < size.width) {
       canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);

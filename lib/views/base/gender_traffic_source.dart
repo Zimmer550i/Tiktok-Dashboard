@@ -278,7 +278,7 @@ class _TrafficRow extends StatelessWidget {
               ),
             ),
             if (!isLast)
-              Container(height: 1, color: Colors.white.withOpacity(0.08)),
+              Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           ],
         ),
       );

@@ -19,12 +19,15 @@ class SimpleBarChart extends StatelessWidget {
       final activeDateLabel = controller.activeChartDateLabel.value;
       // Always render the full fixed-range timeline.
       final int barCount = isMonthly ? 12 : 31;
-      final List<double> chartData =
-          isMonthly ? d.monthlyChartValues : d.dailyChartValues;
-      final List<double> standardData =
-          isMonthly ? d.monthlyStandardValues : d.dailyStandardValues;
-      final List<double> additionalData =
-          isMonthly ? d.monthlyAdditionalValues : d.dailyAdditionalValues;
+      final List<double> chartData = isMonthly
+          ? d.monthlyChartValues
+          : d.dailyChartValues;
+      final List<double> standardData = isMonthly
+          ? d.monthlyStandardValues
+          : d.dailyStandardValues;
+      final List<double> additionalData = isMonthly
+          ? d.monthlyAdditionalValues
+          : d.dailyAdditionalValues;
 
       // Compute max only from visible fixed range so bar heights match.
       double maxVal = 0.0;
@@ -98,7 +101,7 @@ class SimpleBarChart extends StatelessWidget {
                                 return const SizedBox.shrink();
                               }
 
-                              final double barMaxHeight = 120.0;
+                              const double barMaxHeight = 120.0;
                               final double availableWidth =
                                   constraints.maxWidth;
                               final double computedBarWidth =
@@ -111,13 +114,13 @@ class SimpleBarChart extends StatelessWidget {
 
                               double standardAt(int index) =>
                                   index < standardData.length
-                                      ? standardData[index]
-                                      : 0.0;
+                                  ? standardData[index]
+                                  : 0.0;
 
                               double additionalAt(int index) =>
                                   index < additionalData.length
-                                      ? additionalData[index]
-                                      : 0.0;
+                                  ? additionalData[index]
+                                  : 0.0;
 
                               double valueAt(int index) {
                                 final s = standardAt(index);
@@ -149,21 +152,24 @@ class SimpleBarChart extends StatelessWidget {
                                 return "Feb ${index + 1}";
                               }
 
-                              final int activeIndexClamped =
-                                  activeIndex.clamp(0, barCount - 1);
+                              final int activeIndexClamped = activeIndex.clamp(
+                                0,
+                                barCount - 1,
+                              );
 
-                              final double spacingBetween =
-                                  barCount > 1
-                                      ? (availableWidth - barCount * barWidth) /
-                                          (barCount - 1)
-                                      : 0.0;
+                              final double spacingBetween = barCount > 1
+                                  ? (availableWidth - barCount * barWidth) /
+                                        (barCount - 1)
+                                  : 0.0;
 
                               const double tooltipWidth = 200.0;
-                              final double barCenter = activeIndexClamped *
+                              final double barCenter =
+                                  activeIndexClamped *
                                       (barWidth + spacingBetween) +
                                   barWidth / 2;
                               final double barLeft = barCenter - (barWidth / 2);
-                              final double barRight = barCenter + (barWidth / 2);
+                              final double barRight =
+                                  barCenter + (barWidth / 2);
                               const double sideGap = 8.0;
 
                               final bool canPlaceRight =
@@ -180,7 +186,8 @@ class SimpleBarChart extends StatelessWidget {
                               } else {
                                 // In tight layouts, prioritize not covering the selected bar.
                                 // Allow overflow outside the chart area (Stack uses clipBehavior: Clip.none).
-                                tooltipLeft = activeIndexClamped < (barCount / 2)
+                                tooltipLeft =
+                                    activeIndexClamped < (barCount / 2)
                                     ? (barRight + sideGap)
                                     : (barLeft - sideGap - tooltipWidth);
                               }
@@ -191,11 +198,12 @@ class SimpleBarChart extends StatelessWidget {
                                   GestureDetector(
                                     behavior: HitTestBehavior.translucent,
                                     onTapDown: (details) {
-                                      if (availableWidth <= 0 ||
-                                          barCount <= 0) return;
+                                      if (availableWidth <= 0 || barCount <= 0) {
+                                        return;
+                                      }
                                       final dx = details.localPosition.dx;
-                                      final idx = ((dx / availableWidth) *
-                                                  barCount)
+                                      final idx =
+                                          ((dx / availableWidth) * barCount)
                                               .floor()
                                               .clamp(0, barCount - 1);
                                       final val = valueAt(idx);
@@ -224,8 +232,8 @@ class SimpleBarChart extends StatelessWidget {
                                         return;
                                       }
                                       final dx = details.localPosition.dx;
-                                      final idx = ((dx / availableWidth) *
-                                                  barCount)
+                                      final idx =
+                                          ((dx / availableWidth) * barCount)
                                               .floor()
                                               .clamp(0, barCount - 1);
                                       final std = standardAt(idx);
@@ -237,10 +245,12 @@ class SimpleBarChart extends StatelessWidget {
                                       if (total <= 0 && fallback > 0) {
                                         total = fallback;
                                       }
-                                      final displayStd =
-                                          std + add > 0 ? std : total;
-                                      final displayAdd =
-                                          std + add > 0 ? add : 0.0;
+                                      final displayStd = std + add > 0
+                                          ? std
+                                          : total;
+                                      final displayAdd = std + add > 0
+                                          ? add
+                                          : 0.0;
 
                                       final String barTitle = isMonthly
                                           ? "Month ${idx + 1} Data"
@@ -258,16 +268,20 @@ class SimpleBarChart extends StatelessWidget {
                                             additionalV,
                                           );
 
-                                          final parsedStd = double.tryParse(
-                                                standardV
-                                                    .trim()
-                                                    .replaceAll(',', '.'),
+                                          final parsedStd =
+                                              double.tryParse(
+                                                standardV.trim().replaceAll(
+                                                  ',',
+                                                  '.',
+                                                ),
                                               ) ??
                                               0.0;
-                                          final parsedAdd = double.tryParse(
-                                                additionalV
-                                                    .trim()
-                                                    .replaceAll(',', '.'),
+                                          final parsedAdd =
+                                              double.tryParse(
+                                                additionalV.trim().replaceAll(
+                                                  ',',
+                                                  '.',
+                                                ),
                                               ) ??
                                               0.0;
                                           controller.setChartSelection(
@@ -288,25 +302,29 @@ class SimpleBarChart extends StatelessWidget {
                                               CrossAxisAlignment.end,
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
-                                          children: List.generate(barCount,
-                                              (index) {
+                                          children: List.generate(barCount, (
+                                            index,
+                                          ) {
                                             final std = standardAt(index);
                                             final add = additionalAt(index);
                                             var total = std + add;
-                                            final fallback = index <
-                                                    chartData.length
+                                            final fallback =
+                                                index < chartData.length
                                                 ? chartData[index]
                                                 : 0.0;
                                             if (total <= 0 && fallback > 0) {
                                               total = fallback;
                                             }
 
-                                            const standardColor =
-                                                Color(0xFF0075DB);
-                                            const additionalColor =
-                                                Color(0xFF00D1FF);
-                                            const topRadius =
-                                                Radius.circular(2);
+                                            const standardColor = Color(
+                                              0xFF0075DB,
+                                            );
+                                            const additionalColor = Color(
+                                              0xFF00D1FF,
+                                            );
+                                            const topRadius = Radius.circular(
+                                              2,
+                                            );
 
                                             final double rawH =
                                                 (total / maxVal) * barMaxHeight;
@@ -315,10 +333,12 @@ class SimpleBarChart extends StatelessWidget {
                                                 : 2.0;
 
                                             final bool hasSplit = std + add > 0;
-                                            final double effStd =
-                                                hasSplit ? std : total;
-                                            final double effAdd =
-                                                hasSplit ? add : 0.0;
+                                            final double effStd = hasSplit
+                                                ? std
+                                                : total;
+                                            final double effAdd = hasSplit
+                                                ? add
+                                                : 0.0;
 
                                             double stdH = 0;
                                             double addH = 0;
@@ -344,13 +364,16 @@ class SimpleBarChart extends StatelessWidget {
                                                       width: barWidth,
                                                       decoration:
                                                           const BoxDecoration(
-                                                        color: additionalColor,
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                          topLeft: topRadius,
-                                                          topRight: topRadius,
-                                                        ),
-                                                      ),
+                                                            color:
+                                                                additionalColor,
+                                                            borderRadius:
+                                                                BorderRadius.only(
+                                                                  topLeft:
+                                                                      topRadius,
+                                                                  topRight:
+                                                                      topRadius,
+                                                                ),
+                                                          ),
                                                     ),
                                                   if (stdH > 0)
                                                     Container(
@@ -360,13 +383,13 @@ class SimpleBarChart extends StatelessWidget {
                                                         color: standardColor,
                                                         borderRadius:
                                                             BorderRadius.only(
-                                                          topLeft: addH > 0
-                                                              ? Radius.zero
-                                                              : topRadius,
-                                                          topRight: addH > 0
-                                                              ? Radius.zero
-                                                              : topRadius,
-                                                        ),
+                                                              topLeft: addH > 0
+                                                                  ? Radius.zero
+                                                                  : topRadius,
+                                                              topRight: addH > 0
+                                                                  ? Radius.zero
+                                                                  : topRadius,
+                                                            ),
                                                       ),
                                                     ),
                                                 ],
@@ -387,11 +410,13 @@ class SimpleBarChart extends StatelessWidget {
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF1C1C1E),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                             border: Border.all(
-                                              color: Colors.white
-                                                  .withOpacity(0.12),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.12,
+                                              ),
                                             ),
                                           ),
                                           child: Column(
@@ -410,20 +435,20 @@ class SimpleBarChart extends StatelessWidget {
                                                   ),
                                                   const SizedBox(width: 50),
                                                   Text(
-                                                    "\$${
-                                                        activeValue.toStringAsFixed(2)
-                                                    }",
+                                                    "\$${activeValue.toStringAsFixed(2)}",
                                                     style: const TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                               const Padding(
                                                 padding: EdgeInsets.symmetric(
-                                                    vertical: 8),
+                                                  vertical: 8,
+                                                ),
                                                 child: Divider(
                                                   color: Colors.white10,
                                                   height: 1,

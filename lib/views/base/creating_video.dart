@@ -102,7 +102,9 @@ class _Tag extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2C2C2E).withOpacity(0.8) : null,
+          color: isSelected
+              ? const Color(0xFF2C2C2E).withValues(alpha: 0.8)
+              : null,
           borderRadius: BorderRadius.circular(16),
           border: isSelected
               ? Border.all(color: Colors.white24, width: 0.5)
@@ -151,8 +153,8 @@ class _VideoCard extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.01),
-                        Colors.black.withOpacity(0.95),
+                        Colors.black.withValues(alpha: 0.01),
+                        Colors.black.withValues(alpha: 0.95),
                       ],
                       stops: const [0.4, 0.6, 1.0],
                     ),

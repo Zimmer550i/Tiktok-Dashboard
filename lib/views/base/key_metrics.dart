@@ -133,7 +133,7 @@ class KeyMetricsSection extends StatelessWidget {
 
             const SizedBox(height: 18),
 
-            Container(height: 1, color: Colors.white.withOpacity(0.06)),
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
             const SizedBox(height: 12),
 
             // Graph

@@ -294,7 +294,7 @@ class PerformanceController extends GetxController {
         // Keep reward fields consistent with the "special" chart indices.
         // (Monthly: Jan is index 0. Daily: Feb 15 is index 14.)
         if (isMonthly) {
-          if (list.isNotEmpty && list.length > 0) {
+          if (list.isNotEmpty && list.isNotEmpty) {
             e.standardReward = list[0].toStringAsFixed(2);
             e.additionalReward = "0.00";
             e.creatorRewardsTotal =

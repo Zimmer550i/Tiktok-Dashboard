@@ -7,8 +7,7 @@ const Color _creatorChangeBlue = Color(0xFF0075DB);
 const Color _creatorChangeMuted = Color(0xFF8E8E93);
 
 double _parseCreatorChangeAmount(String valPart) {
-  final cleaned =
-      valPart.replaceAll(r'$', '').replaceAll(',', '.').trim();
+  final cleaned = valPart.replaceAll(r'$', '').replaceAll(',', '.').trim();
   return double.tryParse(cleaned) ?? 0.0;
 }
 
@@ -105,9 +104,9 @@ class CreatorRewardsSection extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: "\$",
-                          style: const TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16),
                         ),
                         TextSpan(
                           text: d.creatorRewardsTotal,
@@ -134,18 +133,15 @@ class CreatorRewardsSection extends StatelessWidget {
                         final IconData trendIcon = changeAmt < 0
                             ? Icons.arrow_drop_down
                             : changeAmt > 0
-                                ? Icons.arrow_drop_up
-                                : Icons.arrow_drop_down;
-                        final Color trendColor =
-                            isUp ? _creatorChangeBlue : _creatorChangeMuted;
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down;
+                        final Color trendColor = isUp
+                            ? _creatorChangeBlue
+                            : _creatorChangeMuted;
 
                         return Row(
                           children: [
-                            Icon(
-                              trendIcon,
-                              color: trendColor,
-                              size: 20,
-                            ),
+                            Icon(trendIcon, color: trendColor, size: 20),
                             const SizedBox(width: 4),
                             Text(
                               "\$$valPart",
@@ -190,7 +186,7 @@ class CreatorRewardsSection extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 children: [

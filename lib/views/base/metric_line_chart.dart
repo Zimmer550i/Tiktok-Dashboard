@@ -8,6 +8,7 @@ class MetricsLineChart extends StatefulWidget {
   final double? maxY;
   final bool editable;
   final ValueChanged<List<double>>? onValuesChanged;
+
   /// When true (e.g. "7 Days" range), data points render as dots on the line.
   final bool showDots;
 
@@ -84,19 +85,21 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 0.6,
             ),
           ),
-          title: const Text("Edit value",
-              style: TextStyle(color: Colors.white)),
+          title: const Text(
+            "Edit value",
+            style: TextStyle(color: Colors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (pointLabel != null) ...[
                 Text(
                   pointLabel,
-                  style: TextStyle(color: Colors.white.withOpacity(0.65)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.65)),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -109,16 +112,18 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                 ),
                 decoration: InputDecoration(
                   hintText: "Enter a number",
-                  hintStyle:
-                      TextStyle(color: Colors.white.withOpacity(0.35)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.35),
+                  ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.white.withOpacity(0.08)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: const Color(0xFF8FD3FF).withOpacity(0.9),
+                      color: const Color(0xFF8FD3FF).withValues(alpha: 0.9),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -140,8 +145,9 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                 if (parsed == null || !parsed.isFinite || parsed < 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content:
-                          Text("Please enter a valid non-negative number."),
+                      content: Text(
+                        "Please enter a valid non-negative number.",
+                      ),
                     ),
                   );
                   return;
@@ -179,7 +185,7 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 0.6,
             ),
           ),
@@ -195,14 +201,16 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
             ),
             decoration: InputDecoration(
               hintText: "Enter a number",
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: const Color(0xFF8FD3FF).withOpacity(0.9),
+                  color: const Color(0xFF8FD3FF).withValues(alpha: 0.9),
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -289,14 +297,14 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
             horizontalInterval: 12,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: MetricsLineChart._grid.withOpacity(0.6),
+                color: MetricsLineChart._grid.withValues(alpha: 0.6),
                 strokeWidth: 1,
                 dashArray: const [2, 2],
               );
             },
             getDrawingVerticalLine: (value) {
               return FlLine(
-                color: MetricsLineChart._grid.withOpacity(0.25),
+                color: MetricsLineChart._grid.withValues(alpha: 0.25),
                 strokeWidth: 1,
                 dashArray: const [2, 6],
               );
@@ -401,9 +409,9 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    MetricsLineChart._line.withOpacity(0.45),
-                    MetricsLineChart._line.withOpacity(0.18),
-                    MetricsLineChart._line.withOpacity(0.05),
+                    MetricsLineChart._line.withValues(alpha: 0.45),
+                    MetricsLineChart._line.withValues(alpha: 0.18),
+                    MetricsLineChart._line.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -431,8 +439,9 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                 final spotIndex = response?.lineBarSpots?.isNotEmpty == true
                     ? response!.lineBarSpots!.first.spotIndex
                     : null;
-                final insertIndex =
-                    spotIndex == null ? _values.length : spotIndex + 1;
+                final insertIndex = spotIndex == null
+                    ? _values.length
+                    : spotIndex + 1;
                 _addValueAt(insertIndex);
                 return;
               }

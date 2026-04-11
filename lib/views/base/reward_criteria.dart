@@ -80,7 +80,7 @@ class _CriteriaItem extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF2C2C2E),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(6.0),
@@ -124,7 +124,7 @@ class _CriteriaItem extends StatelessWidget {
                 child: Text(
                   desc,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 12,
                     height: 1.4,
                   ),
