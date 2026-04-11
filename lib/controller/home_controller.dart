@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
-  DateTime expiredDate = DateTime(2026, 4, 8);
+  DateTime expiredDate = DateTime(2026, 4, 16);
 
   RxBool isExpired = false.obs;
 

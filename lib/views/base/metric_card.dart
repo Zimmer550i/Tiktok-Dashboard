@@ -60,7 +60,7 @@ class MetricCard extends StatelessWidget {
       metric.title,
       style: textTheme.bodyMedium?.copyWith(
         fontSize: 12,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
     );
@@ -77,7 +77,7 @@ class MetricCard extends StatelessWidget {
             },
             style: textTheme.headlineLarge?.copyWith(
               fontSize: 20,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
               color: Colors.white,
             ),

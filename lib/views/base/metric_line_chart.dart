@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MetricsLineChart extends StatefulWidget {
   final List<double> values;
@@ -23,7 +24,7 @@ class MetricsLineChart extends StatefulWidget {
     this.showDots = false,
   });
 
-  static const Color _line = Color.fromARGB(255, 46, 155, 228);
+  static const Color _line = Color(0xFF60B3FF);
   static const Color _grid = Color(0xFF3A3A3C);
   static const Color _axis = Color(0xFF48484A);
   static const Color _muted = Color(0xFF8E8E93);
@@ -34,6 +35,17 @@ class MetricsLineChart extends StatefulWidget {
 
 class _MetricsLineChartState extends State<MetricsLineChart> {
   late List<double> _values;
+
+  /// Editable copy of the four non-zero Y tick labels (high → low). Synced when
+  /// [widget.values] changes from the parent.
+  late List<String> _rightAxisLabels;
+
+  int? _editingRightLabelIndex;
+
+  /// Tweak this to adjust space under the four labels (matches former axis area).
+  static const double _rightColumnBottomGap = 50;
+
+  static const int _rightLabelCount = 4;
 
   String _formatCompact(double value) {
     final abs = value.abs();
@@ -52,17 +64,47 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
     return value.toStringAsFixed(1);
   }
 
+  List<String> _computeRightAxisLabels(double safeMaxY) {
+    const maxRightTitles = 5;
+    final rightInterval = safeMaxY / (maxRightTitles - 1);
+    return List<String>.generate(
+      _rightLabelCount,
+      (i) {
+        final tickIndex = _rightLabelCount - i;
+        return _formatCompact(rightInterval * tickIndex);
+      },
+    );
+  }
+
+  void _finishRightLabelEdit() {
+    setState(() => _editingRightLabelIndex = null);
+  }
+
   @override
   void initState() {
     super.initState();
     _values = List<double>.from(widget.values);
+    final maxYForAxis = _maxYForAxis();
+    final safeMaxY = (maxYForAxis > 0 ? maxYForAxis : 1.0).toDouble();
+    _rightAxisLabels = _computeRightAxisLabels(safeMaxY);
+  }
+
+  double _maxYForAxis() {
+    final fromWidget = widget.maxY;
+    if (fromWidget != null && fromWidget > 0) return fromWidget;
+    if (_values.isEmpty) return 1.0;
+    return _values.reduce((a, b) => a > b ? a : b);
   }
 
   @override
   void didUpdateWidget(covariant MetricsLineChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.values != widget.values) {
+    if (oldWidget.values != widget.values || oldWidget.maxY != widget.maxY) {
       _values = List<double>.from(widget.values);
+      final maxYForAxis = _maxYForAxis();
+      final safeMaxY = (maxYForAxis > 0 ? maxYForAxis : 1.0).toDouble();
+      _rightAxisLabels = _computeRightAxisLabels(safeMaxY);
+      _editingRightLabelIndex = null;
     }
   }
 
@@ -261,23 +303,27 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
       return const SizedBox(height: 170);
     }
 
-    final maxYForAxis = (widget.maxY != null && widget.maxY! > 0)
-        ? widget.maxY!
-        : _values.reduce((a, b) => a > b ? a : b);
-
+    final maxYForAxis = _maxYForAxis();
     final safeMaxY = (maxYForAxis > 0 ? maxYForAxis : 1.0).toDouble();
-    const maxRightTitles = 5;
-    final rightInterval = safeMaxY / (maxRightTitles - 1);
 
     final spots = List.generate(
       _values.length,
       (i) => FlSpot(i.toDouble(), _values[i]),
     );
 
+    const labelStyle = TextStyle(
+      fontSize: 12,
+      color: MetricsLineChart._muted,
+    );
+
     return SizedBox(
       height: 170,
-      child: LineChart(
-        LineChartData(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: LineChart(
+              LineChartData(
           minX: 0,
           maxX: (_values.length - 1).toDouble(),
           minY: 0,
@@ -319,31 +365,8 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
               sideTitles: SideTitles(showTitles: false),
             ),
 
-            rightTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: rightInterval,
-                reservedSize: 34,
-                getTitlesWidget: (value, meta) {
-                  if (value == 0) return const SizedBox();
-
-                  // Only show labels close to our intended tick marks,
-                  // keeping the number of visible labels <= 5.
-                  final tickIndex = (value / rightInterval).round();
-                  final expected = tickIndex * rightInterval;
-                  if ((value - expected).abs() > rightInterval.abs() * 0.02) {
-                    return const SizedBox();
-                  }
-
-                  return Text(
-                    _formatCompact(value),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: MetricsLineChart._muted,
-                    ),
-                  );
-                },
-              ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false, reservedSize: 0),
             ),
 
             bottomTitles: AxisTitles(
@@ -388,16 +411,16 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
               spots: spots,
 
               isCurved: false, // straight lines like screenshot
-              barWidth: 1,
+              barWidth: 1.5,
               color: MetricsLineChart._line,
 
               dotData: FlDotData(
                 show: widget.showDots,
                 getDotPainter: (spot, percent, bar, index) {
                   return FlDotCirclePainter(
-                    radius: 1,
+                    radius: 1.5,
                     color: Colors.white,
-                    strokeWidth: 0.5,
+                    strokeWidth: 1,
                     strokeColor: MetricsLineChart._line,
                   );
                 },
@@ -409,8 +432,8 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    MetricsLineChart._line.withValues(alpha: 0.45),
-                    MetricsLineChart._line.withValues(alpha: 0.18),
+                    MetricsLineChart._line.withValues(alpha: 0.55),
+                    MetricsLineChart._line.withValues(alpha: 0.28),
                     MetricsLineChart._line.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
@@ -450,6 +473,74 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
         ),
         duration: const Duration(milliseconds: 350),
       ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              SizedBox(
+                height: 170 - _rightColumnBottomGap,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(
+                    _rightLabelCount,
+                    (i) => _buildRightAxisLabel(
+                      context,
+                      index: i,
+                      labelStyle: labelStyle,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: _rightColumnBottomGap),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRightAxisLabel(
+    BuildContext context, {
+    required int index,
+    required TextStyle labelStyle,
+  }) {
+    final text = _rightAxisLabels[index];
+    final isEditing = _editingRightLabelIndex == index;
+
+    if (isEditing) {
+      return SizedBox(
+        width: 34,
+        child: TextFormField(
+          initialValue: text,
+          autofocus: true,
+          onTapOutside: (_) {
+            FocusScope.of(context).unfocus();
+            _finishRightLabelEdit();
+          },
+          style: labelStyle,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-+KkMm,Bb]')),
+          ],
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+            border: InputBorder.none,
+          ),
+          onChanged: (v) => _rightAxisLabels[index] = v,
+          onFieldSubmitted: (_) {
+            FocusScope.of(context).unfocus();
+            _finishRightLabelEdit();
+          },
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => setState(() => _editingRightLabelIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Text(text, style: labelStyle),
     );
   }
 }
