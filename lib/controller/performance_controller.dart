@@ -74,6 +74,11 @@ class PerformanceController extends GetxController {
     if (showOverlay) chartOverlayVisible.value = true;
   }
 
+  /// Overlay-only label (does not change underlying bar date keys).
+  void updateActiveChartDateLabel(String v) {
+    activeChartDateLabel.value = v.trim();
+  }
+
   Future<void> load() async {
     final pref = await SharedPreferences.getInstance();
     final raw = pref.getString("performance_data");
@@ -166,7 +171,10 @@ class PerformanceController extends GetxController {
 
   void updateChartValue(int index, String v) {
     try {
-      double value = double.parse(v);
+      final normalized =
+          v.trim().replaceAll(r'$', '').replaceAll(',', '.');
+      final value = double.tryParse(normalized);
+      if (value == null) return;
       data.update((e) {
         if (e != null) {
           if (selectedTimeFilter.value == 0) {
@@ -221,7 +229,7 @@ class PerformanceController extends GetxController {
     String additionalStr,
   ) {
     double parseReward(String raw) {
-      final t = raw.trim().replaceAll(',', '.');
+      final t = raw.trim().replaceAll(r'$', '').replaceAll(',', '.');
       return double.tryParse(t) ?? 0.0;
     }
 

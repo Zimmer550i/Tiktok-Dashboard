@@ -81,13 +81,10 @@ class RewardsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            const Padding(
-              padding: EdgeInsets.only(right: 100),
-              child: Divider(color: Colors.white10),
-            ),
+            const Divider(color: Colors.white10),
             const SizedBox(height: 8),
             const Text(
-              "video must have at least 1,000 qualified views\nto be included in RPM calculation",
+              "Video must have at least 1,000 qualified views to be included in RPM calculation",
               style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12),
             ),
           ],
@@ -114,27 +111,29 @@ class _MetricItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-              color: color,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 4),
+
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

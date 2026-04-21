@@ -64,7 +64,6 @@ class AppTheme {
 
     colorScheme: const ColorScheme.dark(
       primary: primaryBlue,
-      background: background,
       surface: surface,
     ),
 

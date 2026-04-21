@@ -432,55 +432,18 @@ class _SimpleBarChartState extends State<SimpleBarChart> {
                                               ),
                                             ),
                                           ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Text(
-                                                    activeDateLabel,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 50),
-                                                  Text(
-                                                    "\$${activeValue.toStringAsFixed(2)}",
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 8,
-                                                ),
-                                                child: Divider(
-                                                  color: Colors.white10,
-                                                  height: 1,
-                                                ),
-                                              ),
-                                              _TinyRow(
-                                                label: "Standard Reward",
-                                                value:
-                                                    "\$${standardAt(activeIndexClamped).toStringAsFixed(2)}",
-                                                color: const Color(0xFF0075DB),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              _TinyRow(
-                                                label: "Additional Reward",
-                                                value:
-                                                    "\$${additionalAt(activeIndexClamped).toStringAsFixed(2)}",
-                                                color: const Color(0xFF00D1FF),
-                                              ),
-                                            ],
+                                          child: _ChartTooltipFields(
+                                            key: ValueKey(activeIndexClamped),
+                                            controller: controller,
+                                            barIndex: activeIndexClamped,
+                                            dateLabel: activeDateLabel,
+                                            totalValue: activeValue,
+                                            standard: standardAt(
+                                              activeIndexClamped,
+                                            ),
+                                            additional: additionalAt(
+                                              activeIndexClamped,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -608,21 +571,163 @@ class _SimpleBarChartState extends State<SimpleBarChart> {
   }
 }
 
-class _TinyRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
+class _ChartTooltipFields extends StatefulWidget {
+  final PerformanceController controller;
+  final int barIndex;
+  final String dateLabel;
+  final double totalValue;
+  final double standard;
+  final double additional;
 
-  const _TinyRow({
-    required this.label,
-    required this.value,
-    required this.color,
+  const _ChartTooltipFields({
+    super.key,
+    required this.controller,
+    required this.barIndex,
+    required this.dateLabel,
+    required this.totalValue,
+    required this.standard,
+    required this.additional,
   });
 
   @override
+  State<_ChartTooltipFields> createState() => _ChartTooltipFieldsState();
+}
+
+class _ChartTooltipFieldsState extends State<_ChartTooltipFields> {
+  late final TextEditingController _dateTc;
+  late final TextEditingController _totalTc;
+  late final TextEditingController _stdTc;
+  late final TextEditingController _addTc;
+
+  static String _moneyText(double v) => '\$${v.toStringAsFixed(2)}';
+
+  @override
+  void initState() {
+    super.initState();
+    _dateTc = TextEditingController(text: widget.dateLabel);
+    _totalTc = TextEditingController(text: _moneyText(widget.totalValue));
+    _stdTc = TextEditingController(text: _moneyText(widget.standard));
+    _addTc = TextEditingController(text: _moneyText(widget.additional));
+  }
+
+  @override
+  void dispose() {
+    _dateTc.dispose();
+    _totalTc.dispose();
+    _stdTc.dispose();
+    _addTc.dispose();
+    super.dispose();
+  }
+
+  double _parseAmount(String raw) {
+    final cleaned = raw
+        .trim()
+        .replaceAll(r'$', '')
+        .replaceAll(',', '.');
+    return double.tryParse(cleaned) ?? 0.0;
+  }
+
+  void _commitDate() {
+    widget.controller.updateActiveChartDateLabel(_dateTc.text);
+  }
+
+  void _commitTotal() {
+    final v = _parseAmount(_totalTc.text);
+    widget.controller.updateChartValue(
+      widget.barIndex,
+      v.toStringAsFixed(2),
+    );
+    setState(() {
+      _stdTc.text = _moneyText(v);
+      _addTc.text = _moneyText(0);
+    });
+  }
+
+  void _commitSplit() {
+    widget.controller.updateChartSplit(
+      widget.barIndex,
+      _stdTc.text.trim(),
+      _addTc.text.trim(),
+    );
+    final s = _parseAmount(_stdTc.text);
+    final a = _parseAmount(_addTc.text);
+    setState(() {
+      _totalTc.text = _moneyText(s + a);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    const baseStyle = TextStyle(color: Colors.white, fontSize: 12);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _dateTc,
+                style: baseStyle,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onSubmitted: (_) => _commitDate(),
+                onTapOutside: (_) => _commitDate(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _totalTc,
+                textAlign: TextAlign.right,
+                keyboardType: TextInputType.text,
+                style: baseStyle.copyWith(fontWeight: FontWeight.w600),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onEditingComplete: _commitTotal,
+              ),
+            ),
+          ],
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Divider(color: Colors.white10, height: 1),
+        ),
+        _editableRewardRow(
+          label: 'Standard Reward',
+          color: const Color(0xFF0075DB),
+          controller: _stdTc,
+        ),
+        const SizedBox(height: 10),
+        _editableRewardRow(
+          label: 'Additional Reward',
+          color: const Color(0xFF00D1FF),
+          controller: _addTc,
+        ),
+      ],
+    );
+  }
+
+  Widget _editableRewardRow({
+    required String label,
+    required Color color,
+    required TextEditingController controller,
+  }) {
+    const valueStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+    );
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           children: [
@@ -638,12 +743,18 @@ class _TinyRow extends StatelessWidget {
             ),
           ],
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: TextField(
+            controller: controller,
+            textAlign: TextAlign.right,
+            keyboardType: TextInputType.text,
+            style: valueStyle,
+            decoration: const InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onEditingComplete: _commitSplit,
           ),
         ),
       ],

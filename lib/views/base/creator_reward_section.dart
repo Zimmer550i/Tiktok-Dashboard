@@ -188,30 +188,16 @@ class CreatorRewardsSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
-              child: Column(
+              child: const Column(
                 children: [
-                  _SummaryRow(
+                  _RewardTextFieldRow(
                     label: "Standard Reward",
-                    value: "\$${d.standardReward}",
-                    color: const Color(0xFF0075DB),
-                    onTap: () => _edit(
-                      context,
-                      "Standard Reward",
-                      d.standardReward,
-                      controller.updateStandardReward,
-                    ),
+                    color: Color(0xFF0075DB),
                   ),
-                  const SizedBox(height: 10),
-                  _SummaryRow(
+                  SizedBox(height: 10),
+                  _RewardTextFieldRow(
                     label: "Additional Reward",
-                    value: "\$${d.additionalReward}",
-                    color: const Color(0xFF00D1FF),
-                    onTap: () => _edit(
-                      context,
-                      "Additional Reward",
-                      d.additionalReward,
-                      controller.updateAdditionalReward,
-                    ),
+                    color: Color(0xFF00D1FF),
                   ),
                 ],
               ),
@@ -219,7 +205,7 @@ class CreatorRewardsSection extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Bar Chart Placeholder
-            SizedBox(
+            const SizedBox(
               height: 150,
               width: double.infinity,
               child: SimpleBarChart(),
@@ -285,50 +271,81 @@ class _TimeFilter extends StatelessWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
+/// Purely local fields: not bound to [PerformanceModel], prefs, or the chart — no reads or writes.
+class _RewardTextFieldRow extends StatefulWidget {
   final String label;
-  final String value;
   final Color color;
-  final VoidCallback onTap;
 
-  const _SummaryRow({
+  const _RewardTextFieldRow({
     required this.label,
-    required this.value,
     required this.color,
-    required this.onTap,
   });
 
   @override
+  State<_RewardTextFieldRow> createState() => _RewardTextFieldRowState();
+}
+
+class _RewardTextFieldRowState extends State<_RewardTextFieldRow> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '0.00');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: widget.color,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-            ],
-          ),
-          Text(
-            value,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              widget.label,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ],
+        ),
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            textAlign: TextAlign.right,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
+            decoration: const InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              // prefixText: r'$',
+              prefixStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
