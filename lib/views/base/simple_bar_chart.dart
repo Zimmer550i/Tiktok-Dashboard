@@ -1,12 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_extension/controller/performance_controller.dart';
 import 'package:flutter_extension/views/screen/home/performance_screen.dart';
 import 'package:get/get.dart';
 
-class SimpleBarChart extends StatelessWidget {
-  final controller = Get.find<PerformanceController>();
+class SimpleBarChart extends StatefulWidget {
+  const SimpleBarChart({super.key});
 
-  SimpleBarChart({super.key});
+  @override
+  State<SimpleBarChart> createState() => _SimpleBarChartState();
+}
+
+class _SimpleBarChartState extends State<SimpleBarChart> {
+  final controller = Get.find<PerformanceController>();
+  static const int _leftLabelCount = 4;
+  final List<String> _leftAxisLabels = [];
+  int? _editingLeftLabelIndex;
+  double? _lastAxisMax;
+
+  List<String> _defaultLeftAxisLabels(double maxVal) {
+    return [
+      maxVal.toStringAsFixed(1),
+      (maxVal * 0.66).toStringAsFixed(1),
+      (maxVal * 0.33).toStringAsFixed(1),
+      "0",
+    ];
+  }
+
+  void _syncLeftAxisLabels(double maxVal) {
+    final shouldInitialize = _leftAxisLabels.length != _leftLabelCount;
+    final axisChanged = _lastAxisMax == null || (_lastAxisMax! - maxVal).abs() > 0.001;
+
+    if (shouldInitialize || (_editingLeftLabelIndex == null && axisChanged)) {
+      _leftAxisLabels
+        ..clear()
+        ..addAll(_defaultLeftAxisLabels(maxVal));
+      _lastAxisMax = maxVal;
+    }
+  }
+
+  void _finishLeftLabelEdit() {
+    setState(() => _editingLeftLabelIndex = null);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +73,7 @@ class SimpleBarChart extends StatelessWidget {
         if (v > maxVal) maxVal = v;
       }
       maxVal = maxVal > 0 ? maxVal * 1.2 : 3.0;
+      _syncLeftAxisLabels(maxVal);
 
       return Column(
         children: [
@@ -47,33 +83,10 @@ class SimpleBarChart extends StatelessWidget {
                 // Y Axis Labels
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      maxVal.toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: Colors.white24,
-                        fontSize: 10,
-                      ),
-                    ),
-                    Text(
-                      (maxVal * 0.66).toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: Colors.white24,
-                        fontSize: 10,
-                      ),
-                    ),
-                    Text(
-                      (maxVal * 0.33).toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: Colors.white24,
-                        fontSize: 10,
-                      ),
-                    ),
-                    const Text(
-                      "0",
-                      style: TextStyle(color: Colors.white24, fontSize: 10),
-                    ),
-                  ],
+                  children: List.generate(
+                    _leftLabelCount,
+                    (index) => _buildLeftAxisLabel(context, index: index),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 // Chart Area
@@ -552,6 +565,46 @@ class SimpleBarChart extends StatelessWidget {
         ],
       );
     });
+  }
+
+  Widget _buildLeftAxisLabel(BuildContext context, {required int index}) {
+    final text = _leftAxisLabels[index];
+    final isEditing = _editingLeftLabelIndex == index;
+    const labelStyle = TextStyle(color: Colors.white24, fontSize: 10);
+
+    if (isEditing) {
+      return SizedBox(
+        width: 34,
+        child: TextFormField(
+          initialValue: text,
+          autofocus: true,
+          onTapOutside: (_) {
+            FocusScope.of(context).unfocus();
+            _finishLeftLabelEdit();
+          },
+          style: labelStyle,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-+KkMm,Bb]')),
+          ],
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+            border: InputBorder.none,
+          ),
+          onChanged: (v) => _leftAxisLabels[index] = v,
+          onFieldSubmitted: (_) {
+            FocusScope.of(context).unfocus();
+            _finishLeftLabelEdit();
+          },
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => setState(() => _editingLeftLabelIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Text(text, style: labelStyle),
+    );
   }
 }
 
