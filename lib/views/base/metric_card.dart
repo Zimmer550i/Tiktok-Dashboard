@@ -117,7 +117,7 @@ class MetricCard extends StatelessWidget {
     if (metric.isEditing.value) {
       return Row(
         children: [
-          if (changeInfo.number != 0) _buildArrow(changeInfo),
+          if (changeInfo.trend != _ChangeTrend.none) _buildArrow(changeInfo),
           const SizedBox(width: 6),
           Expanded(
             child: TextFormField(
@@ -132,7 +132,7 @@ class MetricCard extends StatelessWidget {
                 color: Colors.white,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().% ]')),
+                FilteringTextInputFormatter.deny(RegExp(r'[\n\r]')),
               ],
               decoration: const InputDecoration(
                 isDense: true,
@@ -150,7 +150,7 @@ class MetricCard extends StatelessWidget {
       );
     }
 
-    if (changeInfo.number == 0) {
+    if (changeInfo.delta.isEmpty && changeInfo.secondary.isEmpty) {
       return Text(
         "0",
         style: textTheme.bodySmall?.copyWith(fontSize: 12, color: _muted),
@@ -162,14 +162,14 @@ class MetricCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (changeInfo.number != 0) _buildArrow(changeInfo),
+          if (changeInfo.trend != _ChangeTrend.none) _buildArrow(changeInfo),
           const SizedBox(width: 6),
           Text(
             changeInfo.delta,
             style: textTheme.bodySmall?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: changeInfo.isPositive ? _blue : _muted,
+              color: changeInfo.trend == _ChangeTrend.up ? _blue : _muted,
             ),
           ),
           if (changeInfo.secondary.isNotEmpty) ...[
@@ -188,18 +188,30 @@ class MetricCard extends StatelessWidget {
   }
 
   Widget _buildArrow(_ChangeInfo info) {
-    if (info.number == 0) return const SizedBox();
-    return CircleAvatar(
-      radius: 6,
-      backgroundColor: info.number > 0 ? _blue : _muted,
-      child: Icon(
-        info.number > 0
-            ? Icons.arrow_upward_rounded
-            : Icons.arrow_downward_rounded,
-        size: 10,
-        color: _bg,
-      ),
-    );
+    switch (info.trend) {
+      case _ChangeTrend.up:
+        return const CircleAvatar(
+          radius: 6,
+          backgroundColor: _blue,
+          child: Icon(
+            Icons.arrow_upward_rounded,
+            size: 10,
+            color: _bg,
+          ),
+        );
+      case _ChangeTrend.down:
+        return const CircleAvatar(
+          radius: 6,
+          backgroundColor: _muted,
+          child: Icon(
+            Icons.arrow_downward_rounded,
+            size: 10,
+            color: _bg,
+          ),
+        );
+      case _ChangeTrend.none:
+        return const SizedBox.shrink();
+    }
   }
 
   BoxDecoration _buildDecoration(bool selected) {
@@ -222,7 +234,7 @@ class MetricCard extends StatelessWidget {
     final trimmed = raw.trim();
 
     if (trimmed.isEmpty) {
-      return const _ChangeInfo("0", "", 0);
+      return const _ChangeInfo("", "", 0, _ChangeTrend.none);
     }
 
     final openIndex = trimmed.indexOf('(');
@@ -244,7 +256,15 @@ class MetricCard extends StatelessWidget {
       number = double.tryParse(match.group(0)!) ?? 0;
     }
 
-    return _ChangeInfo(deltaPart, secondaryPart, number);
+    final trend = _trendFromDelta(deltaPart);
+    return _ChangeInfo(deltaPart, secondaryPart, number, trend);
+  }
+
+  static _ChangeTrend _trendFromDelta(String s) {
+    if (s.isEmpty) return _ChangeTrend.none;
+    if (s[0] == '-') return _ChangeTrend.down;
+    if (s == '0' || s == '+0') return _ChangeTrend.none;
+    return _ChangeTrend.up;
   }
 
   // String _compact(double v) {
@@ -254,12 +274,16 @@ class MetricCard extends StatelessWidget {
   // }
 }
 
+
+enum _ChangeTrend { up, down, none }
+
 class _ChangeInfo {
   final String delta;
   final String secondary;
   final double number;
+  final _ChangeTrend trend;
 
-  const _ChangeInfo(this.delta, this.secondary, this.number);
+  const _ChangeInfo(this.delta, this.secondary, this.number, this.trend);
 
   bool get isPositive => number > 0;
   bool get isNegative => number < 0;
