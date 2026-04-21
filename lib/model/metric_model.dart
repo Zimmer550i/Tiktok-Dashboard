@@ -4,10 +4,7 @@ class MetricModel {
   final String title;
 
   RxString value;
-
-  // Internal structured parts
-  RxString _delta;
-  RxString _percent;
+  RxString change;
 
   RxBool isSelected;
   RxBool isEditing;
@@ -18,65 +15,75 @@ class MetricModel {
     required String change,
     bool isSelected = false,
   }) : value = value.obs,
-       _delta = "".obs,
-       _percent = "".obs,
+       change = change.obs,
        isSelected = isSelected.obs,
-       isEditing = false.obs {
-    _parseChange(change);
-  }
-
-  // ----------------------------
-  // Public change getter (UI unchanged)
-  // ----------------------------
-  RxString get change => "${_delta.value} (${_percent.value}%)".obs;
+       isEditing = false.obs;
 
   // ----------------------------
   // Safe update methods
   // ----------------------------
   void updateDelta(String d) {
-    _delta.value = d;
+    final parts = _extractChangeParts(change.value);
+    change.value = _composeChange(d, parts.percent);
   }
 
   void updatePercent(String p) {
-    _percent.value = p;
-  }
-
-  // ----------------------------
-  // Parsing existing string safely
-  // ----------------------------
-  void _parseChange(String raw) {
-    final open = raw.indexOf('(');
-    if (open == -1) {
-      _delta.value = raw;
-      _percent.value = "0";
-      return;
-    }
-
-    _delta.value = raw.substring(0, open).trim();
-
-    final percentPart = raw
-        .substring(open + 1, raw.length - 2)
-        .trim(); // remove ")%"
-    _percent.value = percentPart;
+    final parts = _extractChangeParts(change.value);
+    change.value = _composeChange(parts.delta, p);
   }
 
   Map<String, dynamic> toJson() => {
     "title": title,
     "value": value.value,
-    "delta": _delta.value,
-    "percent": _percent.value,
+    "delta": _extractChangeParts(change.value).delta,
+    "percent": _extractChangeParts(change.value).percent,
+    "change": change.value,
     "isSelected": isSelected.value,
   };
 
   factory MetricModel.fromJson(Map<String, dynamic> json) {
+    final rawChange = (json["change"] ?? "").toString().trim();
     final delta = json["delta"] ?? "0";
     final percent = json["percent"] ?? "0";
 
     return MetricModel(
       title: json["title"],
       value: json["value"],
-      change: "$delta ($percent%)",
+      change: rawChange.isNotEmpty ? rawChange : _composeChange(delta, percent),
       isSelected: json["isSelected"] ?? false,
     );
   }
+
+  static _ChangeParts _extractChangeParts(String raw) {
+    final trimmed = raw.trim();
+    final open = trimmed.indexOf('(');
+    final close = trimmed.lastIndexOf(')');
+
+    if (open == -1 || close == -1 || close <= open) {
+      return _ChangeParts(trimmed, "0");
+    }
+
+    final delta = trimmed.substring(0, open).trim();
+    var percent = trimmed.substring(open + 1, close).trim();
+    if (percent.endsWith('%')) {
+      percent = percent.substring(0, percent.length - 1).trim();
+    }
+
+    return _ChangeParts(delta, percent.isEmpty ? "0" : percent);
+  }
+
+  static String _composeChange(String delta, String percent) {
+    final d = delta.trim();
+    final p = percent.trim();
+    if (d.isEmpty) return "0";
+    if (p.isEmpty) return d;
+    return "$d ($p%)";
+  }
+}
+
+class _ChangeParts {
+  final String delta;
+  final String percent;
+
+  const _ChangeParts(this.delta, this.percent);
 }

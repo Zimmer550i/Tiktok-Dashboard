@@ -12,9 +12,40 @@ import '../model/metric_model.dart';
 enum AnalyticsRange { d7, d28, d60, d365, custom }
 
 class AnalyticsController extends GetxController {
+  static DateTime _anchorToday() {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
+
+  static String _shortChartLabel(DateTime d) {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return "${months[d.month - 1]} ${d.day}";
+  }
+
   final range = AnalyticsRange.d7.obs;
-  final startDate = DateTime(2024, 2, 9).obs;
-  final endDate = DateTime(2024, 2, 15).obs;
+  final startDate =
+      AnalyticsController._anchorToday().subtract(const Duration(days: 6)).obs;
+  final endDate = AnalyticsController._anchorToday().obs;
+
+  /// Short labels for the line chart bottom axis (e.g. "Feb 9"). Editable separately from the full date row.
+  final chartAxisStart = AnalyticsController._shortChartLabel(
+    AnalyticsController._anchorToday().subtract(const Duration(days: 6)),
+  ).obs;
+  final chartAxisEnd =
+      AnalyticsController._shortChartLabel(AnalyticsController._anchorToday()).obs;
 
   // Tab selection (0=Inspiration,1=Overview,2=Content,3=Viewers,4=Followers)
   final selectedTab = 1.obs;
@@ -39,6 +70,8 @@ class AnalyticsController extends GetxController {
   static const _kQueriesKey = "queries_";
   static const _kStartKey = "start_";
   static const _kEndKey = "end_";
+  static const _kChartAxisStartKey = "chart_axis_start_";
+  static const _kChartAxisEndKey = "chart_axis_end_";
 
   // ── convenience ──────────────────────────────────────────────────────────
   bool get show365 => range.value == AnalyticsRange.d365;
@@ -63,21 +96,38 @@ class AnalyticsController extends GetxController {
   Future<void> setRange(AnalyticsRange r, {DateTimeRange? custom}) async {
     range.value = r;
 
+    final prevStart = startDate.value;
+    final prevEnd = endDate.value;
+
     if (r == AnalyticsRange.custom && custom != null) {
-      startDate.value = custom.start;
-      endDate.value = custom.end;
-    } else {
-      final now = DateTime(2025, 2, 15);
+      startDate.value = DateTime(
+        custom.start.year,
+        custom.start.month,
+        custom.start.day,
+      );
+      endDate.value = DateTime(
+        custom.end.year,
+        custom.end.month,
+        custom.end.day,
+      );
+    } else if (r != AnalyticsRange.custom) {
+      final now = _anchorToday();
       final days = _rangeDays(r);
       endDate.value = now;
       startDate.value = now.subtract(Duration(days: days - 1));
     }
 
-    _applyDefaultsFor(r);
-    await _loadFor(r);
+    final datesChanged =
+        startDate.value != prevStart || endDate.value != prevEnd;
 
-    // Refresh graph for the currently selected metric after range/data change
+    _applyDefaultsFor(r);
+    await _loadFor(r, applyPersistedRangeDates: false);
+
+    if (datesChanged) {
+      _syncChartAxisFromDates();
+    }
     _updateGraphSeries(selectedMetricIndex.value);
+    await _saveFor(r);
   }
 
   int _rangeDays(AnalyticsRange r) {
@@ -96,6 +146,14 @@ class AnalyticsController extends GetxController {
   }
 
   String get dateLabel => "${_fmt(startDate.value)} - ${_fmt(endDate.value)}";
+
+  void _syncChartAxisFromDates() {
+    chartAxisStart.value = _fmtChartAxis(startDate.value);
+    chartAxisEnd.value = _fmtChartAxis(endDate.value);
+  }
+
+  String _fmtChartAxis(DateTime d) => AnalyticsController._shortChartLabel(d);
+
   String _fmt(DateTime d) {
     const months = [
       "Jan",
@@ -112,6 +170,123 @@ class AnalyticsController extends GetxController {
       "Dec",
     ];
     return "${months[d.month - 1]} ${d.day}, ${d.year}";
+  }
+
+  Future<bool> updateDateRangeFromText(String raw) async {
+    final parts = raw.trim().split(RegExp(r'\s+-\s+'));
+    if (parts.length != 2) return false;
+    final start = _parseDate(parts[0].trim());
+    final end = _parseDate(parts[1].trim());
+    if (start == null || end == null || start.isAfter(end)) return false;
+    startDate.value = start;
+    endDate.value = end;
+    _syncChartAxisFromDates();
+    await _saveFor(range.value);
+    return true;
+  }
+
+  Future<void> commitChartBottomLabels(String startRaw, String endRaw) async {
+    final s = startRaw.trim();
+    final e = endRaw.trim();
+    chartAxisStart.value = s;
+    chartAxisEnd.value = e;
+
+    final ds = _parseChartAxisShort(s, referenceYear: startDate.value.year);
+    final de = _parseChartAxisShort(e, referenceYear: endDate.value.year);
+    if (ds != null && de != null) {
+      var startD = DateTime(ds.year, ds.month, ds.day);
+      var endD = DateTime(de.year, de.month, de.day);
+      if (endD.isBefore(startD)) {
+        endD = DateTime(startD.year + 1, endD.month, endD.day);
+      }
+      if (!startD.isAfter(endD)) {
+        startDate.value = startD;
+        endDate.value = endD;
+      }
+    }
+
+    await _saveFor(range.value);
+  }
+
+  DateTime? _parseChartAxisShort(String raw, {required int referenceYear}) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+
+    final match = RegExp(
+      r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})(?:,\s*(\d{4}))?$',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (match == null) return null;
+
+    final monthMap = {
+      "jan": 1,
+      "feb": 2,
+      "mar": 3,
+      "apr": 4,
+      "may": 5,
+      "jun": 6,
+      "jul": 7,
+      "aug": 8,
+      "sep": 9,
+      "oct": 10,
+      "nov": 11,
+      "dec": 12,
+    };
+
+    final month = monthMap[match.group(1)!.toLowerCase()];
+    final day = int.tryParse(match.group(2)!);
+    final year = match.group(3) != null
+        ? int.tryParse(match.group(3)!)
+        : referenceYear;
+    if (month == null || day == null || year == null) return null;
+
+    final candidate = DateTime(year, month, day);
+    if (candidate.year != year || candidate.month != month || candidate.day != day) {
+      return null;
+    }
+    return candidate;
+  }
+
+  DateTime? _parseDate(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+
+    final iso = DateTime.tryParse(text);
+    if (iso != null) {
+      return DateTime(iso.year, iso.month, iso.day);
+    }
+
+    final match = RegExp(
+      r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s*(\d{4})$',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (match == null) return null;
+
+    final monthMap = {
+      "jan": 1,
+      "feb": 2,
+      "mar": 3,
+      "apr": 4,
+      "may": 5,
+      "jun": 6,
+      "jul": 7,
+      "aug": 8,
+      "sep": 9,
+      "oct": 10,
+      "nov": 11,
+      "dec": 12,
+    };
+
+    final month = monthMap[match.group(1)!.toLowerCase()];
+    final day = int.tryParse(match.group(2)!);
+    final year = int.tryParse(match.group(3)!);
+    if (month == null || day == null || year == null) return null;
+
+    final candidate = DateTime(year, month, day);
+    if (candidate.year != year || candidate.month != month || candidate.day != day) {
+      return null;
+    }
+    return candidate;
   }
 
   // ── Metric selection ────────────────────────────────────────────────────────
@@ -356,7 +531,10 @@ class AnalyticsController extends GetxController {
   void saveSearchQueries() => _saveFor(range.value);
   String _suffix(AnalyticsRange r) => r.name;
 
-  Future<void> _loadFor(AnalyticsRange r) async {
+  Future<void> _loadFor(
+    AnalyticsRange r, {
+    bool applyPersistedRangeDates = true,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final suf = _suffix(r);
 
@@ -368,9 +546,36 @@ class AnalyticsController extends GetxController {
     final st = prefs.getString("$_kStartKey$suf");
     final en = prefs.getString("$_kEndKey$suf");
 
-    if (st != null && en != null) {
-      startDate.value = DateTime.tryParse(st) ?? startDate.value;
-      endDate.value = DateTime.tryParse(en) ?? endDate.value;
+    if (applyPersistedRangeDates) {
+      if (r == AnalyticsRange.custom) {
+        if (st != null && en != null) {
+          startDate.value = DateTime.tryParse(st) ?? startDate.value;
+          endDate.value = DateTime.tryParse(en) ?? endDate.value;
+        }
+      } else {
+        final now = _anchorToday();
+        final days = _rangeDays(r);
+        endDate.value = now;
+        startDate.value = now.subtract(Duration(days: days - 1));
+      }
+    }
+
+    if (applyPersistedRangeDates) {
+      if (r == AnalyticsRange.custom) {
+        final cs = prefs.getString("$_kChartAxisStartKey$suf");
+        final ce = prefs.getString("$_kChartAxisEndKey$suf");
+        if (cs != null &&
+            ce != null &&
+            cs.trim().isNotEmpty &&
+            ce.trim().isNotEmpty) {
+          chartAxisStart.value = cs;
+          chartAxisEnd.value = ce;
+        } else {
+          _syncChartAxisFromDates();
+        }
+      } else {
+        _syncChartAxisFromDates();
+      }
     }
 
     if (mStr != null) {
@@ -408,6 +613,8 @@ class AnalyticsController extends GetxController {
 
     await prefs.setString("$_kStartKey$suf", startDate.value.toIso8601String());
     await prefs.setString("$_kEndKey$suf", endDate.value.toIso8601String());
+    await prefs.setString("$_kChartAxisStartKey$suf", chartAxisStart.value);
+    await prefs.setString("$_kChartAxisEndKey$suf", chartAxisEnd.value);
     await prefs.setString(
       "$_kMetricsKey$suf",
       jsonEncode(metrics.map((e) => e.toJson()).toList()),

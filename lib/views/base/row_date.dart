@@ -37,25 +37,13 @@ class RangeRow extends StatelessWidget {
             _RangePill(
               label: "Custom",
               active: controller.range.value == AnalyticsRange.custom,
-              trailing: const Icon(Icons.keyboard_arrow_down, size: 18),
-              onTap: () async {
-                final now = DateTime.now();
-                final picked = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(now.year - 5),
-                  lastDate: DateTime(now.year + 1),
-                  initialDateRange: DateTimeRange(
-                    start: controller.startDate.value,
-                    end: controller.endDate.value,
-                  ),
-                );
-                if (picked != null) {
-                  await controller.setRange(
-                    AnalyticsRange.custom,
-                    custom: picked,
-                  );
-                }
-              },
+              onTap: () => controller.setRange(
+                AnalyticsRange.custom,
+                custom: DateTimeRange(
+                  start: controller.startDate.value,
+                  end: controller.endDate.value,
+                ),
+              ),
             ),
           ],
         ),
@@ -68,13 +56,11 @@ class _RangePill extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
-  final Widget? trailing;
 
   const _RangePill({
     required this.label,
     required this.active,
     required this.onTap,
-    this.trailing,
   });
 
   @override
@@ -100,15 +86,6 @@ class _RangePill extends StatelessWidget {
                   color: active ? Colors.black : Colors.white,
                 ),
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 6),
-                IconTheme(
-                  data: IconThemeData(
-                    color: active ? Colors.black : Colors.white,
-                  ),
-                  child: trailing!,
-                ),
-              ],
             ],
           ),
         ),

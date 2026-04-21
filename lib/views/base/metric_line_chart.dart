@@ -10,6 +10,9 @@ class MetricsLineChart extends StatefulWidget {
   final bool editable;
   final ValueChanged<List<double>>? onValuesChanged;
 
+  /// When set with [editable], bottom axis labels become tap-to-edit like the right axis.
+  final void Function(String start, String end)? onBottomLabelsCommitted;
+
   /// When true (e.g. "7 Days" range), data points render as dots on the line.
   final bool showDots;
 
@@ -21,6 +24,7 @@ class MetricsLineChart extends StatefulWidget {
     this.maxY,
     this.editable = false,
     this.onValuesChanged,
+    this.onBottomLabelsCommitted,
     this.showDots = false,
   });
 
@@ -41,6 +45,12 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
   late List<String> _rightAxisLabels;
 
   int? _editingRightLabelIndex;
+
+  late String _bottomStart;
+  late String _bottomEnd;
+
+  /// 0 = start, 1 = end
+  int? _editingBottomIndex;
 
   /// Tweak this to adjust space under the four labels (matches former axis area).
   static const double _rightColumnBottomGap = 50;
@@ -87,6 +97,8 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
     final maxYForAxis = _maxYForAxis();
     final safeMaxY = (maxYForAxis > 0 ? maxYForAxis : 1.0).toDouble();
     _rightAxisLabels = _computeRightAxisLabels(safeMaxY);
+    _bottomStart = widget.startLabel;
+    _bottomEnd = widget.endLabel;
   }
 
   double _maxYForAxis() {
@@ -106,6 +118,17 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
       _rightAxisLabels = _computeRightAxisLabels(safeMaxY);
       _editingRightLabelIndex = null;
     }
+    if (oldWidget.startLabel != widget.startLabel ||
+        oldWidget.endLabel != widget.endLabel) {
+      _bottomStart = widget.startLabel;
+      _bottomEnd = widget.endLabel;
+      _editingBottomIndex = null;
+    }
+  }
+
+  void _finishBottomLabelEdit() {
+    setState(() => _editingBottomIndex = null);
+    widget.onBottomLabelsCommitted?.call(_bottomStart, _bottomEnd);
   }
 
   Future<void> _editValueAt(int index) async {
@@ -118,7 +141,7 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
       context: context,
       builder: (context) {
         final pointLabel = (index == 0 || index == _values.length - 1)
-            ? (index == 0 ? widget.startLabel : widget.endLabel)
+            ? (index == 0 ? _bottomStart : _bottomEnd)
             : null;
 
         return AlertDialog(
@@ -374,34 +397,8 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
                 showTitles: true,
                 interval: (_values.length - 1).toDouble(),
                 reservedSize: 22,
-                getTitlesWidget: (value, meta) {
-                  String label = "";
-                  if (value == 0) {
-                    label = widget.startLabel;
-                  } else if (value == _values.length - 1) {
-                    label = widget.endLabel;
-                  } else {
-                    return const SizedBox();
-                  }
-
-                  return SideTitleWidget(
-                    meta: meta,
-                    space: 6,
-                    fitInside: SideTitleFitInsideData(
-                      enabled: true,
-                      axisPosition: meta.axisPosition,
-                      parentAxisSize: meta.parentAxisSize,
-                      distanceFromEdge: 0,
-                    ),
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: MetricsLineChart._muted,
-                      ),
-                    ),
-                  );
-                },
+                getTitlesWidget: (value, meta) =>
+                    _buildBottomTitle(context, value, meta),
               ),
             ),
           ),
@@ -498,6 +495,84 @@ class _MetricsLineChartState extends State<MetricsLineChart> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBottomTitle(BuildContext context, double value, TitleMeta meta) {
+    final isStart = value == 0;
+    final isEnd = value == (_values.length - 1).toDouble();
+    if (!isStart && !isEnd) return const SizedBox();
+
+    final index = isStart ? 0 : 1;
+    final label = isStart ? _bottomStart : _bottomEnd;
+    final canEdit = widget.editable && widget.onBottomLabelsCommitted != null;
+    final isEditing = _editingBottomIndex == index;
+
+    final fitInside = SideTitleFitInsideData(
+      enabled: true,
+      axisPosition: meta.axisPosition,
+      parentAxisSize: meta.parentAxisSize,
+      distanceFromEdge: 0,
+    );
+
+    if (canEdit && isEditing) {
+      return SideTitleWidget(
+        meta: meta,
+        space: 6,
+        fitInside: fitInside,
+        child: SizedBox(
+          width: 56,
+          child: TextFormField(
+            initialValue: label,
+            autofocus: true,
+            onTapOutside: (_) {
+              FocusScope.of(context).unfocus();
+              _finishBottomLabelEdit();
+            },
+            style: const TextStyle(
+              fontSize: 12,
+              color: MetricsLineChart._muted,
+            ),
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+              border: InputBorder.none,
+            ),
+            onChanged: (v) {
+              if (isStart) {
+                _bottomStart = v;
+              } else {
+                _bottomEnd = v;
+              }
+            },
+            onFieldSubmitted: (_) {
+              FocusScope.of(context).unfocus();
+              _finishBottomLabelEdit();
+            },
+          ),
+        ),
+      );
+    }
+
+    final textChild = Text(
+      label,
+      style: const TextStyle(
+        fontSize: 12,
+        color: MetricsLineChart._muted,
+      ),
+    );
+
+    return SideTitleWidget(
+      meta: meta,
+      space: 6,
+      fitInside: fitInside,
+      child: canEdit
+          ? GestureDetector(
+              onTap: () => setState(() => _editingBottomIndex = index),
+              behavior: HitTestBehavior.opaque,
+              child: textChild,
+            )
+          : textChild,
     );
   }
 

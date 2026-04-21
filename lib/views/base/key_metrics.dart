@@ -37,31 +37,9 @@ class KeyMetricsSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () async {
-                final now = DateTime.now();
-                final picked = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(now.year - 5),
-                  lastDate: DateTime(now.year + 1),
-                  initialDateRange: DateTimeRange(
-                    start: controller.startDate.value,
-                    end: controller.endDate.value,
-                  ),
-                );
-
-                if (picked != null) {
-                  await controller.setRange(
-                    AnalyticsRange.custom,
-                    custom: picked,
-                  );
-                }
-              },
-              child: Text(
-                controller.dateLabel,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
-              ),
+            _DateInput(
+              value: controller.dateLabel,
+              onSubmit: (v) => controller.updateDateRangeFromText(v),
             ),
 
             const SizedBox(height: 16),
@@ -140,33 +118,80 @@ class KeyMetricsSection extends StatelessWidget {
             MetricsLineChart(
               values: controller.series,
               maxY: controller.yMax,
-              startLabel: _fmt(controller.startDate.value),
-              endLabel: _fmt(controller.endDate.value),
+              startLabel: controller.chartAxisStart.value,
+              endLabel: controller.chartAxisEnd.value,
               editable: true,
               showDots: controller.range.value == AnalyticsRange.d7,
               onValuesChanged: (v) => controller.updateSeriesValues(v),
+              onBottomLabelsCommitted: (s, e) =>
+                  controller.commitChartBottomLabels(s, e),
             ),
           ],
         );
       }),
     );
   }
+}
 
-  static String _fmt(DateTime d) {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return "${months[d.month - 1]} ${d.day}";
+class _DateInput extends StatefulWidget {
+  final String value;
+  final Future<bool> Function(String) onSubmit;
+
+  const _DateInput({required this.value, required this.onSubmit});
+
+  @override
+  State<_DateInput> createState() => _DateInputState();
+}
+
+class _DateInputState extends State<_DateInput> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DateInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && _controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
+
+  Future<void> _commit() async {
+    final ok = await widget.onSubmit(_controller.text);
+    if (!ok && mounted) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      style: const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+      decoration: const InputDecoration(
+        isDense: true,
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
+      ),
+      onSubmitted: (_) => _commit(),
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+        _commit();
+      },
+    );
   }
 }

@@ -101,7 +101,7 @@ class MetricCard extends StatelessWidget {
               metric.value.value,
               style: textTheme.headlineLarge?.copyWith(
                 fontSize: 20,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
                 color: Colors.white,
               ),
