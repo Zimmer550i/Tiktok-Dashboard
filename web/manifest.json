@@ -1,6 +1,6 @@
 {
-    "name": "flutter_extension",
-    "short_name": "flutter_extension",
+    "name": "tiktok_dashboard",
+    "short_name": "tiktok_dashboard",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

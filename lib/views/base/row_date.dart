@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/analytics_controller.dart';
+import 'package:tiktok_dashboard/controller/analytics_controller.dart';
 import 'package:get/get.dart';
 
 class RangeRow extends StatelessWidget {

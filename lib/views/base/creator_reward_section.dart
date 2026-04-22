@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/performance_controller.dart';
-import 'package:flutter_extension/views/base/simple_bar_chart.dart';
+import 'package:tiktok_dashboard/controller/performance_controller.dart';
+import 'package:tiktok_dashboard/views/base/simple_bar_chart.dart';
 import 'package:get/get.dart';
 
 const Color _creatorChangeBlue = Color(0xFF0075DB);
@@ -276,10 +276,7 @@ class _RewardTextFieldRow extends StatefulWidget {
   final String label;
   final Color color;
 
-  const _RewardTextFieldRow({
-    required this.label,
-    required this.color,
-  });
+  const _RewardTextFieldRow({required this.label, required this.color});
 
   @override
   State<_RewardTextFieldRow> createState() => _RewardTextFieldRowState();

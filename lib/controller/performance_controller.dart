@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter_extension/model/performance_model.dart';
+import 'package:tiktok_dashboard/model/performance_model.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,8 +171,7 @@ class PerformanceController extends GetxController {
 
   void updateChartValue(int index, String v) {
     try {
-      final normalized =
-          v.trim().replaceAll(r'$', '').replaceAll(',', '.');
+      final normalized = v.trim().replaceAll(r'$', '').replaceAll(',', '.');
       final value = double.tryParse(normalized);
       if (value == null) return;
       data.update((e) {
@@ -223,11 +222,7 @@ class PerformanceController extends GetxController {
   }
 
   /// Sets standard and additional amounts for one chart bar; total is derived as their sum.
-  void updateChartSplit(
-    int index,
-    String standardStr,
-    String additionalStr,
-  ) {
+  void updateChartSplit(int index, String standardStr, String additionalStr) {
     double parseReward(String raw) {
       final t = raw.trim().replaceAll(r'$', '').replaceAll(',', '.');
       return double.tryParse(t) ?? 0.0;
@@ -289,10 +284,12 @@ class PerformanceController extends GetxController {
 
         final isMonthly = selectedTimeFilter.value != 0;
         final list = isMonthly ? e.monthlyChartValues : e.dailyChartValues;
-        final stdList =
-            isMonthly ? e.monthlyStandardValues : e.dailyStandardValues;
-        final addList =
-            isMonthly ? e.monthlyAdditionalValues : e.dailyAdditionalValues;
+        final stdList = isMonthly
+            ? e.monthlyStandardValues
+            : e.dailyStandardValues;
+        final addList = isMonthly
+            ? e.monthlyAdditionalValues
+            : e.dailyAdditionalValues;
 
         final insertAt = (index + 1).clamp(0, list.length);
         list.insert(insertAt, value);

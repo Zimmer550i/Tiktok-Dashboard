@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/splash_controller.dart';
+import 'package:tiktok_dashboard/controller/splash_controller.dart';
 import 'package:get/get.dart';
 
 class SplashScreen extends StatefulWidget {

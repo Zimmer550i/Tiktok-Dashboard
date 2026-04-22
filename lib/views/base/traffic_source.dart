@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_extension/controller/analytics_controller.dart';
-import 'package:flutter_extension/model/traffic_source_model.dart';
+import 'package:tiktok_dashboard/controller/analytics_controller.dart';
+import 'package:tiktok_dashboard/model/traffic_source_model.dart';
 import 'package:get/get.dart';
 
 class TrafficSourceSection extends StatelessWidget {

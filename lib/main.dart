@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/util/app_constants.dart';
-import 'package:flutter_extension/util/app_theme.dart';
-import 'package:flutter_extension/views/screen/home/dashboard_screen.dart';
+import 'package:tiktok_dashboard/util/app_constants.dart';
+import 'package:tiktok_dashboard/util/app_theme.dart';
+import 'package:tiktok_dashboard/views/screen/home/dashboard_screen.dart';
 import 'package:get/get.dart';
 
 void main() async {

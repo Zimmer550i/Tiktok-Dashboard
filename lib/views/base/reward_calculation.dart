@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/performance_controller.dart';
+import 'package:tiktok_dashboard/controller/performance_controller.dart';
 import 'package:get/get.dart';
 
 class RewardsCard extends StatelessWidget {

@@ -1,11 +1,11 @@
 // ignore_for_file: unused_element_parameter
 
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/performance_controller.dart';
-import 'package:flutter_extension/views/base/creating_video.dart';
-import 'package:flutter_extension/views/base/creator_reward_section.dart';
-import 'package:flutter_extension/views/base/reward_calculation.dart';
-import 'package:flutter_extension/views/base/reward_criteria.dart';
+import 'package:tiktok_dashboard/controller/performance_controller.dart';
+import 'package:tiktok_dashboard/views/base/creating_video.dart';
+import 'package:tiktok_dashboard/views/base/creator_reward_section.dart';
+import 'package:tiktok_dashboard/views/base/reward_calculation.dart';
+import 'package:tiktok_dashboard/views/base/reward_criteria.dart';
 import 'package:get/get.dart';
 
 class PerformancePage extends StatelessWidget {
@@ -106,7 +106,10 @@ class _Header extends StatelessWidget {
                               onPrimary: Colors.white,
                               surface: Color(0xFF1C1C1E),
                               onSurface: Colors.white,
-                            ), dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF1C1C1E)),
+                            ),
+                            dialogTheme: const DialogThemeData(
+                              backgroundColor: Color(0xFF1C1C1E),
+                            ),
                           ),
                           child: child!,
                         );

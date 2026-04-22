@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_extension/controller/analytics_controller.dart';
-import 'package:flutter_extension/model/metric_model.dart';
+import 'package:tiktok_dashboard/controller/analytics_controller.dart';
+import 'package:tiktok_dashboard/model/metric_model.dart';
 import 'package:get/get.dart';
 
 class MetricCard extends StatelessWidget {
@@ -193,21 +193,13 @@ class MetricCard extends StatelessWidget {
         return const CircleAvatar(
           radius: 6,
           backgroundColor: _blue,
-          child: Icon(
-            Icons.arrow_upward_rounded,
-            size: 10,
-            color: _bg,
-          ),
+          child: Icon(Icons.arrow_upward_rounded, size: 10, color: _bg),
         );
       case _ChangeTrend.down:
         return const CircleAvatar(
           radius: 6,
           backgroundColor: _muted,
-          child: Icon(
-            Icons.arrow_downward_rounded,
-            size: 10,
-            color: _bg,
-          ),
+          child: Icon(Icons.arrow_downward_rounded, size: 10, color: _bg),
         );
       case _ChangeTrend.none:
         return const SizedBox.shrink();
@@ -273,7 +265,6 @@ class MetricCard extends StatelessWidget {
   //   return v == v.truncateToDouble() ? v.toInt().toString() : v.toString();
   // }
 }
-
 
 enum _ChangeTrend { up, down, none }
 

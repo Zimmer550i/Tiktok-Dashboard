@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/home_controller.dart';
-import 'package:flutter_extension/util/app_colors.dart';
-import 'package:flutter_extension/util/app_snackbar.dart';
-import 'package:flutter_extension/views/screen/home/analytics_screen.dart';
-import 'package:flutter_extension/views/screen/home/performance_screen.dart';
+import 'package:tiktok_dashboard/controller/home_controller.dart';
+import 'package:tiktok_dashboard/util/app_colors.dart';
+import 'package:tiktok_dashboard/util/app_snackbar.dart';
+import 'package:tiktok_dashboard/views/screen/home/analytics_screen.dart';
+import 'package:tiktok_dashboard/views/screen/home/performance_screen.dart';
 import 'package:get/get.dart';
 
 class DashboardScreen extends StatefulWidget {

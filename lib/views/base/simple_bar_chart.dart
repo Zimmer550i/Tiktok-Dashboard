@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_extension/controller/performance_controller.dart';
-import 'package:flutter_extension/views/screen/home/performance_screen.dart';
+import 'package:tiktok_dashboard/controller/performance_controller.dart';
+import 'package:tiktok_dashboard/views/screen/home/performance_screen.dart';
 import 'package:get/get.dart';
 
 class SimpleBarChart extends StatefulWidget {
@@ -29,7 +29,8 @@ class _SimpleBarChartState extends State<SimpleBarChart> {
 
   void _syncLeftAxisLabels(double maxVal) {
     final shouldInitialize = _leftAxisLabels.length != _leftLabelCount;
-    final axisChanged = _lastAxisMax == null || (_lastAxisMax! - maxVal).abs() > 0.001;
+    final axisChanged =
+        _lastAxisMax == null || (_lastAxisMax! - maxVal).abs() > 0.001;
 
     if (shouldInitialize || (_editingLeftLabelIndex == null && axisChanged)) {
       _leftAxisLabels
@@ -211,7 +212,8 @@ class _SimpleBarChartState extends State<SimpleBarChart> {
                                   GestureDetector(
                                     behavior: HitTestBehavior.translucent,
                                     onTapDown: (details) {
-                                      if (availableWidth <= 0 || barCount <= 0) {
+                                      if (availableWidth <= 0 ||
+                                          barCount <= 0) {
                                         return;
                                       }
                                       final dx = details.localPosition.dx;
@@ -620,10 +622,7 @@ class _ChartTooltipFieldsState extends State<_ChartTooltipFields> {
   }
 
   double _parseAmount(String raw) {
-    final cleaned = raw
-        .trim()
-        .replaceAll(r'$', '')
-        .replaceAll(',', '.');
+    final cleaned = raw.trim().replaceAll(r'$', '').replaceAll(',', '.');
     return double.tryParse(cleaned) ?? 0.0;
   }
 
@@ -633,10 +632,7 @@ class _ChartTooltipFieldsState extends State<_ChartTooltipFields> {
 
   void _commitTotal() {
     final v = _parseAmount(_totalTc.text);
-    widget.controller.updateChartValue(
-      widget.barIndex,
-      v.toStringAsFixed(2),
-    );
+    widget.controller.updateChartValue(widget.barIndex, v.toStringAsFixed(2));
     setState(() {
       _stdTc.text = _moneyText(v);
       _addTc.text = _moneyText(0);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/views/base/metric_card.dart';
-import 'package:flutter_extension/views/base/metric_line_chart.dart';
+import 'package:tiktok_dashboard/views/base/metric_card.dart';
+import 'package:tiktok_dashboard/views/base/metric_line_chart.dart';
 import 'package:get/get.dart';
 import '../../controller/analytics_controller.dart';
 

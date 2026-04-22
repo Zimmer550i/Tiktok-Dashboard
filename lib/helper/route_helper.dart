@@ -1,4 +1,4 @@
-import 'package:flutter_extension/views/screen/home/analytics_screen.dart';
+import 'package:tiktok_dashboard/views/screen/home/analytics_screen.dart';
 import 'package:get/get.dart';
 
 import '../views/screen/splash/splash_screen.dart';

@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/analytics_controller.dart';
-import 'package:flutter_extension/model/gender_model.dart';
+import 'package:tiktok_dashboard/controller/analytics_controller.dart';
+import 'package:tiktok_dashboard/model/gender_model.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
 

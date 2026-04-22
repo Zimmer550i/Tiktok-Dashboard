@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/model/gender_model.dart';
-import 'package:flutter_extension/model/search_query_model.dart';
-import 'package:flutter_extension/model/traffic_source_model.dart';
+import 'package:tiktok_dashboard/model/gender_model.dart';
+import 'package:tiktok_dashboard/model/search_query_model.dart';
+import 'package:tiktok_dashboard/model/traffic_source_model.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,16 +36,18 @@ class AnalyticsController extends GetxController {
   }
 
   final range = AnalyticsRange.d7.obs;
-  final startDate =
-      AnalyticsController._anchorToday().subtract(const Duration(days: 6)).obs;
+  final startDate = AnalyticsController._anchorToday()
+      .subtract(const Duration(days: 6))
+      .obs;
   final endDate = AnalyticsController._anchorToday().obs;
 
   /// Short labels for the line chart bottom axis (e.g. "Feb 9"). Editable separately from the full date row.
   final chartAxisStart = AnalyticsController._shortChartLabel(
     AnalyticsController._anchorToday().subtract(const Duration(days: 6)),
   ).obs;
-  final chartAxisEnd =
-      AnalyticsController._shortChartLabel(AnalyticsController._anchorToday()).obs;
+  final chartAxisEnd = AnalyticsController._shortChartLabel(
+    AnalyticsController._anchorToday(),
+  ).obs;
 
   // Tab selection (0=Inspiration,1=Overview,2=Content,3=Viewers,4=Followers)
   final selectedTab = 1.obs;
@@ -241,7 +243,9 @@ class AnalyticsController extends GetxController {
     if (month == null || day == null || year == null) return null;
 
     final candidate = DateTime(year, month, day);
-    if (candidate.year != year || candidate.month != month || candidate.day != day) {
+    if (candidate.year != year ||
+        candidate.month != month ||
+        candidate.day != day) {
       return null;
     }
     return candidate;
@@ -283,7 +287,9 @@ class AnalyticsController extends GetxController {
     if (month == null || day == null || year == null) return null;
 
     final candidate = DateTime(year, month, day);
-    if (candidate.year != year || candidate.month != month || candidate.day != day) {
+    if (candidate.year != year ||
+        candidate.month != month ||
+        candidate.day != day) {
       return null;
     }
     return candidate;

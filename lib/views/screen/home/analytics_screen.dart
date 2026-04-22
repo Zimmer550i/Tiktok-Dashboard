@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_extension/controller/analytics_controller.dart';
-import 'package:flutter_extension/views/base/gender_traffic_source.dart';
-import 'package:flutter_extension/views/base/key_metrics.dart';
-import 'package:flutter_extension/views/base/row_date.dart';
-import 'package:flutter_extension/views/base/search_queries_section.dart';
-import 'package:flutter_extension/views/base/traffic_source.dart';
+import 'package:tiktok_dashboard/controller/analytics_controller.dart';
+import 'package:tiktok_dashboard/views/base/gender_traffic_source.dart';
+import 'package:tiktok_dashboard/views/base/key_metrics.dart';
+import 'package:tiktok_dashboard/views/base/row_date.dart';
+import 'package:tiktok_dashboard/views/base/search_queries_section.dart';
+import 'package:tiktok_dashboard/views/base/traffic_source.dart';
 import 'package:get/get.dart';
 
 class AnalyticsScreen extends StatelessWidget {

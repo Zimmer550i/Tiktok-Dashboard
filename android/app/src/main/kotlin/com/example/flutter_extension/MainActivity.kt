@@ -1,4 +1,4 @@
-package com.example.flutter_extension
+package com.example.tiktok_dashboard
 
 import io.flutter.embedding.android.FlutterActivity
 
