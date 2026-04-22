@@ -76,7 +76,6 @@ class RewardsCard extends StatelessWidget {
                     c.updateQualifiedViews,
                   ),
                   fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -99,14 +98,12 @@ class _MetricItem extends StatelessWidget {
   final String value;
   final VoidCallback onTap;
   final double? fontSize;
-  final Color? color;
 
   const _MetricItem({
     required this.title,
     required this.value,
     required this.onTap,
     this.fontSize = 16,
-    this.color = Colors.white,
   });
 
   @override
@@ -129,7 +126,7 @@ class _MetricItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: Colors.white,
               ),
             ),
           ],

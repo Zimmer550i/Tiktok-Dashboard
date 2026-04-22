@@ -69,10 +69,14 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () => Get.back(),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-              size: 18,
+            child: const SizedBox(
+              height: 24,
+              width: 24,
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ),
           const Expanded(
@@ -87,7 +91,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 26),
+          const SizedBox(width: 32),
         ],
       ),
     );

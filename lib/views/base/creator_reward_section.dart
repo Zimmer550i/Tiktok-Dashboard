@@ -291,7 +291,7 @@ class _RewardTextFieldRowState extends State<_RewardTextFieldRow> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: '0.00');
+    _controller = TextEditingController(text: '\$0.00');
   }
 
   @override
@@ -326,7 +326,7 @@ class _RewardTextFieldRowState extends State<_RewardTextFieldRow> {
           child: TextField(
             controller: _controller,
             textAlign: TextAlign.right,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            // keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
@@ -335,12 +335,6 @@ class _RewardTextFieldRowState extends State<_RewardTextFieldRow> {
             decoration: const InputDecoration(
               isDense: true,
               border: InputBorder.none,
-              // prefixText: r'$',
-              prefixStyle: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
               contentPadding: EdgeInsets.zero,
             ),
           ),
